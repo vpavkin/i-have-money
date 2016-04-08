@@ -1,0 +1,17 @@
+syntax = "proto3";
+option java_package = "ru.pavkin.ihavemoney.proto";
+option optimize_for = SPEED;
+
+message PBReceiveIncome {
+	string amount = 1;
+	string currency = 2;
+	string category = 3;
+	string comment = 15;
+}
+
+message PBSpend {
+	string amount = 1;
+	string currency = 2;
+	string category = 3;
+	string comment = 15;
+}

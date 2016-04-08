@@ -1,0 +1,27 @@
+syntax = "proto3";
+option java_package = "ru.pavkin.ihavemoney.proto";
+option optimize_for = SPEED;
+
+message PBMetadata {
+	string aggregate_id = 1;
+	string command_id = 2;
+	string event_id = 3;
+	string timestamp = 4;
+	repeated string tags = 5;
+}
+
+message PBFortuneIncreased {
+    string amount = 1;
+    string currency = 2;
+    string category = 3;
+	PBMetadata metadata = 4;
+    string comment = 15;
+}
+
+message PBFortuneSpent {
+	string amount = 1;
+	string currency = 2;
+	string category = 3;
+	PBMetadata metadata = 4;
+	string comment = 15;
+}
