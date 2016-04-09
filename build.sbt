@@ -3,6 +3,7 @@ import org.flywaydb.sbt.FlywayPlugin._
 
 lazy val buildSettings = Seq(
   organization := "ru.pavkin.ihavemoney",
+  version := "0.1.0-SNAPSHOT",
   scalaVersion := "2.11.8"
 )
 
@@ -69,8 +70,8 @@ lazy val protobufSettings = Protobuf.protobufSettings ++
 
 lazy val iHaveMoney = project.in(file("."))
   .settings(buildSettings)
-  .aggregate(domain, writeBackend, writeFrontend)
-  .dependsOn(domain, writeBackend, writeFrontend)
+  .aggregate(domain, serialization, writeBackend, writeFrontend)
+  .dependsOn(domain, serialization, writeBackend, writeFrontend)
 
 lazy val domain = project.in(file("domain"))
   .settings(
@@ -86,6 +87,20 @@ lazy val domain = project.in(file("domain"))
     )
   )
   .settings(testDependencies)
+
+lazy val serialization = project.in(file("serialization"))
+  .settings(
+    moduleName := "serialization",
+    name := "serialization"
+  )
+  .settings(allSettings: _*)
+  .settings(protobufSettings: _*)
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-actor" % akkaVersion
+    )
+  )
+  .dependsOn(domain)
 
 lazy val writeBackend = project.in(file("write-backend"))
   .settings(
@@ -149,7 +164,7 @@ lazy val writeBackend = project.in(file("write-backend"))
         entryPoint(entry: _*)
       }
     }))
-  .dependsOn(domain)
+  .dependsOn(domain, serialization)
 
 lazy val writeFrontend = project.in(file("write-frontend"))
   .settings(
@@ -201,4 +216,4 @@ lazy val writeFrontend = project.in(file("write-frontend"))
         entryPoint(entry: _*)
       }
     }))
-  .dependsOn(domain)
+  .dependsOn(domain, serialization)

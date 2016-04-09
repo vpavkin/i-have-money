@@ -1,4 +1,4 @@
-package ru.pavkin.ihavemoney.writeback.serializers
+package ru.pavkin.ihavemoney.serialization
 
 import akka.serialization.SerializerWithStringManifest
 import com.trueaccord.scalapb.{GeneratedMessage, Message}

@@ -2,6 +2,14 @@ syntax = "proto3";
 option java_package = "ru.pavkin.ihavemoney.proto";
 option optimize_for = SPEED;
 
+message PBCommandEnvelope {
+	string aggregateId = 1;
+	oneof command {
+		PBReceiveIncome command1 = 2;
+		PBSpend command2 = 3;
+	}
+}
+
 message PBReceiveIncome {
 	string amount = 1;
 	string currency = 2;

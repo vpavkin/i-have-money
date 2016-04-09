@@ -1,0 +1,21 @@
+syntax = "proto3";
+option java_package = "ru.pavkin.ihavemoney.proto";
+option optimize_for = SPEED;
+
+message CommandSuccess {
+	string id = 1;
+}
+
+message InvalidCommand {
+	string id = 1;
+	string reason = 2;
+}
+
+message UnknownCommand {
+	string commandType = 1;
+}
+
+message UnexpectedFailure {
+	string id = 1;
+	string reason = 2;
+}

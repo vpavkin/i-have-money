@@ -1,12 +1,16 @@
-package ru.pavkin.ihavemoney.writeback.serializers
+package ru.pavkin.ihavemoney.serialization
 
 import java.time.OffsetDateTime
 
+import com.trueaccord.scalapb.GeneratedMessageCompanion
+import ru.pavkin.ihavemoney.domain.CommandEnvelope
 import ru.pavkin.ihavemoney.domain.fortune.FortuneId
 import ru.pavkin.ihavemoney.domain.fortune.FortuneProtocol._
-import ru.pavkin.ihavemoney.proto.commands.{PBReceiveIncome, PBSpend}
+import ru.pavkin.ihavemoney.proto.commands.{PBCommandEnvelope, PBReceiveIncome, PBSpend}
 import ru.pavkin.ihavemoney.proto.events.{PBFortuneIncreased, PBFortuneSpent, PBMetadata}
 import ru.pavkin.utils.option._
+import ProtobufSuite.syntax._
+import ru.pavkin.ihavemoney.proto.commands.PBCommandEnvelope.Command.{Command1, Command2, Empty}
 
 object implicits {
   def deserializeFortuneMetadata(m: PBMetadata): FortuneMetadata =
@@ -84,11 +88,26 @@ object implicits {
       def companion = PBSpend
     }
 
-  object identity {
-    implicit val fortuneIncreasedPBSuite: ProtobufSuite[PBFortuneIncreased, PBFortuneIncreased] =
-      ProtobufSuite.identity(PBFortuneIncreased)
-
-    implicit val fortuneSpentPBSuite: ProtobufSuite[PBFortuneSpent, PBFortuneSpent] =
-      ProtobufSuite.identity(PBFortuneSpent)
-  }
+  implicit val commandEnvelopeSuite: ProtobufSuite[CommandEnvelope, PBCommandEnvelope] =
+    new ProtobufSuite[CommandEnvelope, PBCommandEnvelope] {
+      def encode(m: CommandEnvelope): PBCommandEnvelope = PBCommandEnvelope(
+        m.aggregateId,
+        m.command match {
+          case f: FortuneCommand ⇒ f match {
+            case s: ReceiveIncome ⇒ PBCommandEnvelope.Command.Command1(s.encode)
+            case s: Spend ⇒ PBCommandEnvelope.Command.Command2(s.encode)
+          }
+          case other ⇒ throw new Exception(s"Unknown domain command ${other.getClass.getName}")
+        }
+      )
+      def decode(p: PBCommandEnvelope): CommandEnvelope = CommandEnvelope(
+        p.aggregateId,
+        p.command match {
+          case Empty => throw new Exception(s"Received empty command envelope")
+          case Command1(value) => value.decode
+          case Command2(value) => value.decode
+        }
+      )
+      def companion: GeneratedMessageCompanion[PBCommandEnvelope] = PBCommandEnvelope
+    }
 }

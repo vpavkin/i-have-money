@@ -1,3 +1,5 @@
 package ru.pavkin.ihavemoney.domain
 
-case class CommandEnvelope(entityId: String, command: AnyRef)
+import io.funcqrs.DomainCommand
+
+case class CommandEnvelope(aggregateId: String, command: DomainCommand)

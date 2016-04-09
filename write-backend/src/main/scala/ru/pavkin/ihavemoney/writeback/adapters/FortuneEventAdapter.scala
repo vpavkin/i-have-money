@@ -3,8 +3,8 @@ package ru.pavkin.ihavemoney.writeback.adapters
 import akka.persistence.journal.{EventAdapter, EventSeq}
 import ru.pavkin.ihavemoney.domain.fortune.FortuneProtocol._
 import ru.pavkin.ihavemoney.proto.events._
-import ru.pavkin.ihavemoney.writeback.serializers.ProtobufSuite.syntax._
-import ru.pavkin.ihavemoney.writeback.serializers.implicits._
+import ru.pavkin.ihavemoney.serialization.implicits._
+import ru.pavkin.ihavemoney.serialization.ProtobufSuite.syntax._
 
 class FortuneEventAdapter extends EventAdapter with DomainEventTagAdapter {
   override def manifest(event: Any): String = ""
