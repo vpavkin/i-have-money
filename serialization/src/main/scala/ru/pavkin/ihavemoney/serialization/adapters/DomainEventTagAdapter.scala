@@ -1,4 +1,4 @@
-package ru.pavkin.ihavemoney.writeback.adapters
+package ru.pavkin.ihavemoney.serialization.adapters
 
 import akka.persistence.journal.Tagged
 import io.funcqrs.Metadata

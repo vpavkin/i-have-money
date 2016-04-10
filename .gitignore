@@ -14,5 +14,4 @@ project/plugins/project/
 
 .idea
 
-sbt-writeback.sh
-sbt-writefront.sh
+sbt-*.sh

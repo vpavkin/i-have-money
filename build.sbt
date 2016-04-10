@@ -52,8 +52,17 @@ lazy val journal_db_name = sys.props.getOrElse("ihavemoney.writeback.db.name", "
 lazy val journal_db_user = sys.props.getOrElse("ihavemoney.writeback.db.user", "admin")
 lazy val journal_db_password = sys.props.getOrElse("ihavemoney.writeback.db.password", "changeit")
 
+lazy val read_db_host = sys.props.getOrElse("ihavemoney.readback.db.host", "127.0.0.1")
+lazy val read_db_port = sys.props.getOrElse("ihavemoney.readback.db.port", "5432")
+lazy val read_db_name = sys.props.getOrElse("ihavemoney.readback.db.name", "ihavemoney")
+lazy val read_db_user = sys.props.getOrElse("ihavemoney.readback.db.user", "admin")
+lazy val read_db_password = sys.props.getOrElse("ihavemoney.readback.db.password", "changeit")
+
 lazy val writeback_host = sys.props.getOrElse("ihavemoney.writeback.host", "127.0.0.1")
 lazy val writeback_port = sys.props.getOrElse("ihavemoney.writeback.port", "9301")
+
+lazy val readback_host = sys.props.getOrElse("ihavemoney.readback.host", "127.0.0.1")
+lazy val readback_port = sys.props.getOrElse("ihavemoney.readback.port", "11000")
 
 lazy val writefront_host = sys.props.getOrElse("ihavemoney.writefront.host", "127.0.0.1")
 lazy val writefront_http_port = sys.props.getOrElse("ihavemoney.writefront.http_port", "8080")
@@ -97,7 +106,8 @@ lazy val serialization = project.in(file("serialization"))
   .settings(protobufSettings: _*)
   .settings(
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor" % akkaVersion
+      "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+      "com.typesafe.akka" %% "akka-persistence" % akkaVersion
     )
   )
   .dependsOn(domain)
@@ -108,7 +118,6 @@ lazy val writeBackend = project.in(file("write-backend"))
     name := "write-backend"
   )
   .settings(allSettings: _*)
-  .settings(protobufSettings: _*)
   .settings(flywaySettings: _*)
   .settings(
     flywayUrl := s"jdbc:postgresql://$journal_db_host:$journal_db_port/$journal_db_name",
@@ -172,7 +181,6 @@ lazy val writeFrontend = project.in(file("write-frontend"))
     name := "write-frontend"
   )
   .settings(allSettings: _*)
-  .settings(protobufSettings)
   .settings(
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
@@ -213,6 +221,72 @@ lazy val writeFrontend = project.in(file("write-frontend"))
         copy(resources, applicationConf)
         expose(writefront_http_port.toInt)
         expose(writefront_tcp_port.toInt)
+        entryPoint(entry: _*)
+      }
+    }))
+  .dependsOn(domain, serialization)
+
+lazy val readBackend = project.in(file("read-backend"))
+  .settings(
+    moduleName := "read-backend",
+    name := "read-backend"
+  )
+  .settings(allSettings: _*)
+  .settings(flywaySettings: _*)
+  .settings(
+    flywayUrl := s"jdbc:postgresql://$read_db_host:$read_db_port/$read_db_name",
+    flywayUser := read_db_user,
+    flywayPassword := read_db_password,
+    flywayBaselineOnMigrate := true,
+    flywayLocations := Seq("filesystem:read-backend/src/main/resources/db/migrations")
+  )
+  .settings(
+    libraryDependencies ++= Seq(
+      "io.strongtyped" %% "fun-cqrs-akka" % funCQRSVersion,
+      "com.github.dnvriend" %% "akka-persistence-jdbc" % akkaPersistenceJDBCVersion,
+      "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+      "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+      "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
+      "com.typesafe.akka" %% "akka-cluster-sharding" % akkaVersion,
+      "com.typesafe.akka" %% "akka-distributed-data-experimental" % akkaVersion,
+      "com.typesafe.akka" %% "akka-persistence-query-experimental" % akkaVersion,
+      "org.postgresql" % "postgresql" % postgreSQLVersion
+    )
+  )
+  .settings(testDependencies)
+  .settings(
+    mainClass in assembly := Some("ru.pavkin.ihavemoney.readback.Application"),
+    assemblyJarName in assembly := "readback.jar"
+  )
+  .enablePlugins(DockerPlugin)
+  .settings(Seq(
+    dockerfile in docker := {
+      val artifact: File = assembly.value
+      val artifactTargetPath = artifact.name
+      val applicationConf = "application.conf"
+      val resources = (resourceDirectory in Compile).value / applicationConf
+      val entry = Seq(
+        "java",
+        s"-Dihavemoney.writeback.db.user=$journal_db_user",
+        s"-Dihavemoney.writeback.db.password=$journal_db_password",
+        s"-Dihavemoney.writeback.db.host=$journal_db_host",
+        s"-Dihavemoney.writeback.db.port=$journal_db_port",
+        s"-Dihavemoney.writeback.db.name=$journal_db_name",
+        s"-Dihavemoney.readback.db.user=$read_db_user",
+        s"-Dihavemoney.readback.db.password=$read_db_password",
+        s"-Dihavemoney.readback.db.host=$read_db_host",
+        s"-Dihavemoney.readback.db.port=$read_db_port",
+        s"-Dihavemoney.readback.db.name=$read_db_name",
+        s"-Dconfig.file=$applicationConf",
+        "-jar",
+        artifactTargetPath
+      )
+      new Dockerfile {
+        from("java:8")
+        copy(artifact, artifactTargetPath)
+        copy(resources, applicationConf)
+        expose(readback_port.toInt)
         entryPoint(entry: _*)
       }
     }))
