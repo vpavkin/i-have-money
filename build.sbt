@@ -59,14 +59,14 @@ lazy val read_db_user = sys.props.getOrElse("ihavemoney.readback.db.user", "admi
 lazy val read_db_password = sys.props.getOrElse("ihavemoney.readback.db.password", "changeit")
 
 lazy val writeback_host = sys.props.getOrElse("ihavemoney.writeback.host", "127.0.0.1")
-lazy val writeback_port = sys.props.getOrElse("ihavemoney.writeback.port", "9301")
+lazy val writeback_port = sys.props.getOrElse("ihavemoney.writeback.port", "9101")
 
 lazy val readback_host = sys.props.getOrElse("ihavemoney.readback.host", "127.0.0.1")
-lazy val readback_port = sys.props.getOrElse("ihavemoney.readback.port", "11000")
+lazy val readback_port = sys.props.getOrElse("ihavemoney.readback.port", "9201")
 
 lazy val writefront_host = sys.props.getOrElse("ihavemoney.writefront.host", "127.0.0.1")
-lazy val writefront_http_port = sys.props.getOrElse("ihavemoney.writefront.http_port", "8080")
-lazy val writefront_tcp_port = sys.props.getOrElse("ihavemoney.writefront.tcp_port", "10000")
+lazy val writefront_http_port = sys.props.getOrElse("ihavemoney.writefront.http_port", "8101")
+lazy val writefront_tcp_port = sys.props.getOrElse("ihavemoney.writefront.tcp_port", "10101")
 
 lazy val testDependencies = libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % scalaCheckVersion % "test",
