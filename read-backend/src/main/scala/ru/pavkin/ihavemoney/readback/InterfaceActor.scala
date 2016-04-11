@@ -1,8 +1,7 @@
 package ru.pavkin.ihavemoney.readback
 
 import akka.actor.Actor
-import akka.util.Timeout
-import ru.pavkin.ihavemoney.readback.interface._
+import ru.pavkin.ihavemoney.domain.query._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}

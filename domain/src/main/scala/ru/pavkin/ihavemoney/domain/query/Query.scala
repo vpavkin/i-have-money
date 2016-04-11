@@ -1,4 +1,4 @@
-package ru.pavkin.ihavemoney.readback.interface
+package ru.pavkin.ihavemoney.domain.query
 
 import ru.pavkin.ihavemoney.domain.fortune.FortuneId
 
