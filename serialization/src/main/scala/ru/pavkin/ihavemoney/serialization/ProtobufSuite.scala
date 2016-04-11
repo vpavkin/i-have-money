@@ -13,13 +13,6 @@ trait ProtobufSuite[M, PB <: GeneratedMessage with Message[PB]] {
 
 object ProtobufSuite {
 
-  def identity[PB <: GeneratedMessage with Message[PB]](compObj: GeneratedMessageCompanion[PB]): ProtobufSuite[PB, PB] =
-    new ProtobufSuite[PB, PB] {
-      def encode(m: PB): PB = m
-      def decode(p: PB): PB = p
-      def companion: GeneratedMessageCompanion[PB] = compObj
-    }
-
   object syntax {
     implicit class MessageOps[M, PB <: GeneratedMessage with Message[PB]](m: M)(implicit ev: ProtobufSuite[M, PB]) {
       def encode: PB = ev.encode(m)

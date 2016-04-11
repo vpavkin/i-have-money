@@ -21,11 +21,11 @@ object FortuneProtocol extends ProtocolLike {
 
   sealed trait FortuneLifecycleCommand extends FortuneCommand
   case class Spend(amount: BigDecimal,
-                   currency: String,
+                   currency: Currency,
                    category: ExpenseCategory,
                    comment: Option[String] = None) extends FortuneLifecycleCommand
   case class ReceiveIncome(amount: BigDecimal,
-                           currency: String,
+                           currency: Currency,
                            category: IncomeCategory,
                            comment: Option[String] = None) extends FortuneLifecycleCommand
 
@@ -33,12 +33,12 @@ object FortuneProtocol extends ProtocolLike {
   sealed trait FortuneEvent extends ProtocolEvent with MetadataFacet[FortuneMetadata]
 
   case class FortuneIncreased(amount: BigDecimal,
-                              currency: String,
+                              currency: Currency,
                               category: IncomeCategory,
                               metadata: FortuneMetadata,
                               comment: Option[String] = None) extends FortuneEvent
   case class FortuneSpent(amount: BigDecimal,
-                          currency: String,
+                          currency: Currency,
                           category: ExpenseCategory,
                           metadata: FortuneMetadata,
                           comment: Option[String] = None) extends FortuneEvent

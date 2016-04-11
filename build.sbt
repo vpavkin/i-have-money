@@ -79,8 +79,8 @@ lazy val protobufSettings = Protobuf.protobufSettings ++
 
 lazy val iHaveMoney = project.in(file("."))
   .settings(buildSettings)
-  .aggregate(domain, serialization, writeBackend, writeFrontend)
-  .dependsOn(domain, serialization, writeBackend, writeFrontend)
+  .aggregate(domain, serialization, writeBackend, writeFrontend, readBackend)
+  .dependsOn(domain, serialization, writeBackend, writeFrontend, readBackend)
 
 lazy val domain = project.in(file("domain"))
   .settings(

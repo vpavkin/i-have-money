@@ -22,11 +22,10 @@ case class Fortune(id: FortuneId, balances: Map[Currency, BigDecimal]) extends A
   def metadata(cmd: FortuneCommand): FortuneMetadata =
     Fortune.metadata(id, cmd)
 
-  def cantHaveNegativeBalance = action[Fortune]
+def cantHaveNegativeBalance = action[Fortune]
     .rejectCommand {
-      case cmd: Spend if this.amount(Currency.unsafeFromCode(cmd.currency)) < cmd.amount =>
-        val c = Currency.unsafeFromCode(cmd.currency)
-        BalanceIsNotEnough(this.amount(c), c)
+      case cmd: Spend if this.amount(cmd.currency) < cmd.amount =>
+        BalanceIsNotEnough(this.amount(cmd.currency), cmd.currency)
     }
 
   def increaseFortune = action[Fortune]
@@ -34,7 +33,7 @@ case class Fortune(id: FortuneId, balances: Map[Currency, BigDecimal]) extends A
       cmd: ReceiveIncome => Fortune.handleReceiveIncome(id, cmd)
     }
     .handleEvent {
-      ev: FortuneIncreased => this.increase(Worth(ev.amount, Currency.unsafeFromCode(ev.currency)))
+      evt: FortuneIncreased => this.increase(Worth(evt.amount, evt.currency))
     }
 
   def decreaseFortune = action[Fortune]
@@ -47,7 +46,7 @@ case class Fortune(id: FortuneId, balances: Map[Currency, BigDecimal]) extends A
         cmd.comment)
     }
     .handleEvent {
-      ev: FortuneSpent => this.decrease(Worth(ev.amount, Currency.unsafeFromCode(ev.currency)))
+      evt: FortuneSpent => this.decrease(Worth(evt.amount, evt.currency))
     }
 }
 
@@ -74,7 +73,7 @@ object Fortune {
         cmd: ReceiveIncome => Fortune.handleReceiveIncome(fortuneId, cmd)
       }
       .handleEvent {
-        evt: FortuneIncreased => Fortune(id = fortuneId, balances = Map(Currency.unsafeFromCode(evt.currency) -> evt.amount))
+        evt: FortuneIncreased => Fortune(id = fortuneId, balances = Map(evt.currency -> evt.amount))
       }
 
   def behavior(fortuneId: FortuneId): Behavior[Fortune] = {

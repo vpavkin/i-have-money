@@ -4,7 +4,7 @@ import java.time.OffsetDateTime
 
 import com.trueaccord.scalapb.GeneratedMessageCompanion
 import ru.pavkin.ihavemoney.domain.CommandEnvelope
-import ru.pavkin.ihavemoney.domain.fortune.FortuneId
+import ru.pavkin.ihavemoney.domain.fortune.{Currency, FortuneId}
 import ru.pavkin.ihavemoney.domain.fortune.FortuneProtocol._
 import ru.pavkin.ihavemoney.proto.commands.{PBCommandEnvelope, PBReceiveIncome, PBSpend}
 import ru.pavkin.ihavemoney.proto.events.{PBFortuneIncreased, PBFortuneSpent, PBMetadata}
@@ -20,13 +20,13 @@ object implicits {
     new ProtobufSuite[FortuneIncreased, PBFortuneIncreased] {
       def encode(m: FortuneIncreased): PBFortuneIncreased = PBFortuneIncreased(
         m.amount.toString,
-        m.currency,
+        m.currency.code,
         m.category.name,
         Some(MetadataSerialization.serialize(m.metadata)),
         m.comment.getOrElse(""))
       def decode(p: PBFortuneIncreased): FortuneIncreased = FortuneIncreased(
         BigDecimal(p.amount),
-        p.currency,
+        Currency.unsafeFromCode(p.currency),
         IncomeCategory(p.category),
         deserializeFortuneMetadata(p.metadata.get),
         notEmpty(p.comment)
@@ -38,13 +38,13 @@ object implicits {
     new ProtobufSuite[FortuneSpent, PBFortuneSpent] {
       def encode(m: FortuneSpent): PBFortuneSpent = PBFortuneSpent(
         m.amount.toString,
-        m.currency,
+        m.currency.code,
         m.category.name,
         Some(MetadataSerialization.serialize(m.metadata)),
         m.comment.getOrElse(""))
       def decode(p: PBFortuneSpent): FortuneSpent = FortuneSpent(
         BigDecimal(p.amount),
-        p.currency,
+        Currency.unsafeFromCode(p.currency),
         ExpenseCategory(p.category),
         deserializeFortuneMetadata(p.metadata.get),
         notEmpty(p.comment)
@@ -56,14 +56,14 @@ object implicits {
     new ProtobufSuite[ReceiveIncome, PBReceiveIncome] {
       def encode(m: ReceiveIncome): PBReceiveIncome = PBReceiveIncome(
         m.amount.toString,
-        m.currency,
+        m.currency.code,
         m.category.name,
         m.comment.getOrElse("")
       )
 
       def decode(p: PBReceiveIncome): ReceiveIncome = ReceiveIncome(
         BigDecimal(p.amount),
-        p.currency,
+        Currency.unsafeFromCode(p.currency),
         IncomeCategory(p.category),
         notEmpty(p.comment)
       )
@@ -74,14 +74,14 @@ object implicits {
     new ProtobufSuite[Spend, PBSpend] {
       def encode(m: Spend): PBSpend = PBSpend(
         m.amount.toString,
-        m.currency,
+        m.currency.code,
         m.category.name,
         m.comment.getOrElse("")
       )
 
       def decode(p: PBSpend): Spend = Spend(
         BigDecimal(p.amount),
-        p.currency,
+        Currency.unsafeFromCode(p.currency),
         ExpenseCategory(p.category),
         notEmpty(p.comment)
       )

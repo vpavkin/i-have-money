@@ -9,11 +9,10 @@ import scala.concurrent.Future
 
 class MoneyViewProjection(repo: MoneyRepo) extends Projection {
 
-  private def adjustFortune(id: FortuneId, currency: String, op: Option[BigDecimal] ⇒ BigDecimal): Future[Unit] = {
-    val c = Currency.unsafeFromCode(currency)
-    repo.find(id, c).flatMap {
-      case Some(amount) ⇒ repo.updateById(id, c, op(Some(amount)))
-      case None ⇒ repo.insert(id, c, op(None))
+  private def adjustFortune(id: FortuneId, currency: Currency, op: Option[BigDecimal] ⇒ BigDecimal): Future[Unit] = {
+    repo.find(id, currency).flatMap {
+      case Some(amount) ⇒ repo.updateById(id, currency, op(Some(amount)))
+      case None ⇒ repo.insert(id, currency, op(None))
     }
   }
 
