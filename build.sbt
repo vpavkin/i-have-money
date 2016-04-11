@@ -349,22 +349,28 @@ lazy val readFrontend = project.in(file("read-frontend"))
       val resources = (resourceDirectory in Compile).value / applicationConf
       val entry = Seq(
         "java",
-        s"-Dihavemoney_readfront_host=$readfront_host",
-        s"-Dihavemoney_readfront_http_port=$readfront_http_port",
-        s"-Dihavemoney_readfront_tcp_port=$readfront_tcp_port",
-        s"-Dihavemoney_readback_host=$readback_host",
-        s"-Dihavemoney_readback_port=$readback_port",
         s"-Dconfig.file=$applicationConf",
         "-jar",
         artifactTargetPath
       )
       new Dockerfile {
         from("java:8")
+        env(
+          "ihavemoney_readback_host" → "127.0.0.1",
+          "ihavemoney_readback_port" → "9201",
+          "ihavemoney_readfront_host" → "127.0.0.1",
+          "ihavemoney_readfront_http_port" → "8201",
+          "ihavemoney_readfront_tcp_port" → "10201"
+        )
         copy(artifact, artifactTargetPath)
         copy(resources, applicationConf)
-        expose(readfront_http_port.toInt)
-        expose(readfront_tcp_port.toInt)
+        addInstruction(Raw("expose", s"$$ihavemoney_readfront_tcp_port"))
+        addInstruction(Raw("expose", s"$$ihavemoney_readfront_http_port"))
         entryPoint(entry: _*)
       }
-    }))
+    },
+    imageNames in docker := Seq(
+      ImageName(s"ihavemoney/${name.value}:latest")
+    )
+  ))
   .dependsOn(domain, serialization)
