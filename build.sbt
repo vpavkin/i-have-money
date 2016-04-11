@@ -279,28 +279,36 @@ lazy val readBackend = project.in(file("read-backend"))
       val resources = (resourceDirectory in Compile).value / applicationConf
       val entry = Seq(
         "java",
-        s"-Dihavemoney_writeback_db_user=$journal_db_user",
-        s"-Dihavemoney_writeback_db_password=$journal_db_password",
-        s"-Dihavemoney_writeback_db_host=$journal_db_host",
-        s"-Dihavemoney_writeback_db_port=$journal_db_port",
-        s"-Dihavemoney_writeback_db_name=$journal_db_name",
-        s"-Dihavemoney_readback_db_user=$read_db_user",
-        s"-Dihavemoney_readback_db_password=$read_db_password",
-        s"-Dihavemoney_readback_db_host=$read_db_host",
-        s"-Dihavemoney_readback_db_port=$read_db_port",
-        s"-Dihavemoney_readback_db_name=$read_db_name",
         s"-Dconfig.file=$applicationConf",
         "-jar",
         artifactTargetPath
       )
       new Dockerfile {
         from("java:8")
+        env(
+          "ihavemoney_writeback_db_user" → "admin",
+          "ihavemoney_writeback_db_password" → "changeit",
+          "ihavemoney_writeback_db_host" → "127.0.0.1",
+          "ihavemoney_writeback_db_port" → "5432",
+          "ihavemoney_writeback_db_name" → "ihavemoney-write",
+          "ihavemoney_readback_db_user" → "admin",
+          "ihavemoney_readback_db_password" → "changeit",
+          "ihavemoney_readback_db_host" → "127.0.0.1",
+          "ihavemoney_readback_db_port" → "5432",
+          "ihavemoney_readback_db_name" → "ihavemoney-read",
+          "ihavemoney_readback_host" → "127.0.0.1",
+          "ihavemoney_readback_port" → "9201"
+        )
         copy(artifact, artifactTargetPath)
         copy(resources, applicationConf)
-        expose(readback_port.toInt)
+        addInstruction(Raw("expose", s"$$ihavemoney_readback_port"))
         entryPoint(entry: _*)
       }
-    }))
+    },
+    imageNames in docker := Seq(
+      ImageName(s"ihavemoney/${name.value}:latest")
+    )
+  ))
   .dependsOn(domain, serialization)
 
 lazy val readFrontend = project.in(file("read-frontend"))
