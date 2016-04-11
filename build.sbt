@@ -48,13 +48,13 @@ lazy val scalaTestVersion = "2.2.6"
 
 lazy val journal_db_host = sys.props.getOrElse("ihavemoney.writeback.db.host", "127.0.0.1")
 lazy val journal_db_port = sys.props.getOrElse("ihavemoney.writeback.db.port", "5432")
-lazy val journal_db_name = sys.props.getOrElse("ihavemoney.writeback.db.name", "ihavemoney")
+lazy val journal_db_name = sys.props.getOrElse("ihavemoney.writeback.db.name", "ihavemoney-write")
 lazy val journal_db_user = sys.props.getOrElse("ihavemoney.writeback.db.user", "admin")
 lazy val journal_db_password = sys.props.getOrElse("ihavemoney.writeback.db.password", "changeit")
 
 lazy val read_db_host = sys.props.getOrElse("ihavemoney.readback.db.host", "127.0.0.1")
 lazy val read_db_port = sys.props.getOrElse("ihavemoney.readback.db.port", "5432")
-lazy val read_db_name = sys.props.getOrElse("ihavemoney.readback.db.name", "ihavemoney")
+lazy val read_db_name = sys.props.getOrElse("ihavemoney.readback.db.name", "ihavemoney-read")
 lazy val read_db_user = sys.props.getOrElse("ihavemoney.readback.db.user", "admin")
 lazy val read_db_password = sys.props.getOrElse("ihavemoney.readback.db.password", "changeit")
 
