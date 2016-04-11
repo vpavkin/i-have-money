@@ -217,24 +217,30 @@ lazy val writeFrontend = project.in(file("write-frontend"))
       val resources = (resourceDirectory in Compile).value / applicationConf
       val entry = Seq(
         "java",
-        s"-Dihavemoney_writefront_host=$writefront_host",
-        s"-Dihavemoney_writefront_http_port=$writefront_http_port",
-        s"-Dihavemoney_writefront_tcp_port=$writefront_tcp_port",
-        s"-Dihavemoney_writeback_host=$writeback_host",
-        s"-Dihavemoney_writeback_port=$writeback_port",
         s"-Dconfig.file=$applicationConf",
         "-jar",
         artifactTargetPath
       )
       new Dockerfile {
         from("java:8")
+        env(
+          "ihavemoney_writeback_host" → "127.0.0.1",
+          "ihavemoney_writeback_port" → "9101",
+          "ihavemoney_writefront_host" → "127.0.0.1",
+          "ihavemoney_writefront_http_port" → "8101",
+          "ihavemoney_writefront_tcp_port" → "10101"
+        )
         copy(artifact, artifactTargetPath)
         copy(resources, applicationConf)
-        expose(writefront_http_port.toInt)
-        expose(writefront_tcp_port.toInt)
+        addInstruction(Raw("expose", s"$$ihavemoney_writefront_tcp_port"))
+        addInstruction(Raw("expose", s"$$ihavemoney_writefront_http_port"))
         entryPoint(entry: _*)
       }
-    }))
+    },
+    imageNames in docker := Seq(
+      ImageName(s"ihavemoney/${name.value}:latest")
+    )
+  ))
   .dependsOn(domain, serialization)
 
 lazy val readBackend = project.in(file("read-backend"))
