@@ -68,6 +68,10 @@ lazy val writefront_host = sys.props.getOrElse("ihavemoney.writefront.host", "12
 lazy val writefront_http_port = sys.props.getOrElse("ihavemoney.writefront.http_port", "8101")
 lazy val writefront_tcp_port = sys.props.getOrElse("ihavemoney.writefront.tcp_port", "10101")
 
+lazy val readfront_host = sys.props.getOrElse("ihavemoney.readfront.host", "127.0.0.1")
+lazy val readfront_http_port = sys.props.getOrElse("ihavemoney.readfront.http_port", "8201")
+lazy val readfront_tcp_port = sys.props.getOrElse("ihavemoney.readfront.tcp_port", "10201")
+
 lazy val testDependencies = libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % scalaCheckVersion % "test",
   "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
@@ -79,8 +83,8 @@ lazy val protobufSettings = Protobuf.protobufSettings ++
 
 lazy val iHaveMoney = project.in(file("."))
   .settings(buildSettings)
-  .aggregate(domain, serialization, writeBackend, writeFrontend, readBackend)
-  .dependsOn(domain, serialization, writeBackend, writeFrontend, readBackend)
+  .aggregate(domain, serialization, writeBackend, writeFrontend, readBackend, readFrontend)
+  .dependsOn(domain, serialization, writeBackend, writeFrontend, readBackend, readFrontend)
 
 lazy val domain = project.in(file("domain"))
   .settings(
@@ -287,6 +291,58 @@ lazy val readBackend = project.in(file("read-backend"))
         copy(artifact, artifactTargetPath)
         copy(resources, applicationConf)
         expose(readback_port.toInt)
+        entryPoint(entry: _*)
+      }
+    }))
+  .dependsOn(domain, serialization)
+
+lazy val readFrontend = project.in(file("read-frontend"))
+  .settings(
+    moduleName := "read-frontend",
+    name := "read-frontend"
+  )
+  .settings(allSettings: _*)
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+      "com.typesafe.akka" %% "akka-remote" % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion,
+      "de.heikoseeberger" %% "akka-http-circe" % "1.5.3"
+    )
+  )
+  .settings(testDependencies)
+  .settings(
+    mainClass in assembly := Some("ru.pavkin.ihavemoney.readfront.Application"),
+    assemblyJarName in assembly := "readfront.jar"
+  )
+  .enablePlugins(DockerPlugin)
+  .settings(Seq(
+    dockerfile in docker := {
+      val artifact: File = assembly.value
+      val artifactTargetPath = artifact.name
+      val applicationConf = "application.conf"
+      val resources = (resourceDirectory in Compile).value / applicationConf
+      val entry = Seq(
+        "java",
+        s"-Dihavemoney.readfront.host=$readfront_host",
+        s"-Dihavemoney.readfront.http_port=$readfront_http_port",
+        s"-Dihavemoney.readfront.tcp_port=$readfront_tcp_port",
+        s"-Dihavemoney.readback.host=$readback_host",
+        s"-Dihavemoney.readback.port=$readback_port",
+        s"-Dconfig.file=$applicationConf",
+        "-jar",
+        artifactTargetPath
+      )
+      new Dockerfile {
+        from("java:8")
+        copy(artifact, artifactTargetPath)
+        copy(resources, applicationConf)
+        expose(readfront_http_port.toInt)
+        expose(readfront_tcp_port.toInt)
         entryPoint(entry: _*)
       }
     }))
