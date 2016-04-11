@@ -1,5 +1,6 @@
 import com.trueaccord.scalapb.{ScalaPbPlugin => Protobuf}
 import org.flywaydb.sbt.FlywayPlugin._
+import sbtdocker.Instructions._
 
 lazy val buildSettings = Seq(
   organization := "ru.pavkin.ihavemoney",
@@ -46,31 +47,31 @@ lazy val akkaPersistenceJDBCVersion = "2.2.15"
 lazy val scalaCheckVersion = "1.12.5"
 lazy val scalaTestVersion = "2.2.6"
 
-lazy val journal_db_host = sys.props.getOrElse("ihavemoney.writeback.db.host", "127.0.0.1")
-lazy val journal_db_port = sys.props.getOrElse("ihavemoney.writeback.db.port", "5432")
-lazy val journal_db_name = sys.props.getOrElse("ihavemoney.writeback.db.name", "ihavemoney-write")
-lazy val journal_db_user = sys.props.getOrElse("ihavemoney.writeback.db.user", "admin")
-lazy val journal_db_password = sys.props.getOrElse("ihavemoney.writeback.db.password", "changeit")
+lazy val journal_db_host = sys.props.getOrElse("ihavemoney_writeback_db_host", "127.0.0.1")
+lazy val journal_db_port = sys.props.getOrElse("ihavemoney_writeback_db_port", "5432")
+lazy val journal_db_name = sys.props.getOrElse("ihavemoney_writeback_db_name", "ihavemoney-write")
+lazy val journal_db_user = sys.props.getOrElse("ihavemoney_writeback_db_user", "admin")
+lazy val journal_db_password = sys.props.getOrElse("ihavemoney_writeback_db_password", "changeit")
 
-lazy val read_db_host = sys.props.getOrElse("ihavemoney.readback.db.host", "127.0.0.1")
-lazy val read_db_port = sys.props.getOrElse("ihavemoney.readback.db.port", "5432")
-lazy val read_db_name = sys.props.getOrElse("ihavemoney.readback.db.name", "ihavemoney-read")
-lazy val read_db_user = sys.props.getOrElse("ihavemoney.readback.db.user", "admin")
-lazy val read_db_password = sys.props.getOrElse("ihavemoney.readback.db.password", "changeit")
+lazy val read_db_host = sys.props.getOrElse("ihavemoney_readback_db_host", "127.0.0.1")
+lazy val read_db_port = sys.props.getOrElse("ihavemoney_readback_db_port", "5432")
+lazy val read_db_name = sys.props.getOrElse("ihavemoney_readback_db_name", "ihavemoney-read")
+lazy val read_db_user = sys.props.getOrElse("ihavemoney_readback_db_user", "admin")
+lazy val read_db_password = sys.props.getOrElse("ihavemoney_readback_db_password", "changeit")
 
-lazy val writeback_host = sys.props.getOrElse("ihavemoney.writeback.host", "127.0.0.1")
-lazy val writeback_port = sys.props.getOrElse("ihavemoney.writeback.port", "9101")
+lazy val writeback_host = sys.props.getOrElse("ihavemoney_writeback_host", "127.0.0.1")
+lazy val writeback_port = sys.props.getOrElse("ihavemoney_writeback_port", "9101")
 
-lazy val readback_host = sys.props.getOrElse("ihavemoney.readback.host", "127.0.0.1")
-lazy val readback_port = sys.props.getOrElse("ihavemoney.readback.port", "9201")
+lazy val readback_host = sys.props.getOrElse("ihavemoney_readback_host", "127.0.0.1")
+lazy val readback_port = sys.props.getOrElse("ihavemoney_readback_port", "9201")
 
-lazy val writefront_host = sys.props.getOrElse("ihavemoney.writefront.host", "127.0.0.1")
-lazy val writefront_http_port = sys.props.getOrElse("ihavemoney.writefront.http_port", "8101")
-lazy val writefront_tcp_port = sys.props.getOrElse("ihavemoney.writefront.tcp_port", "10101")
+lazy val writefront_host = sys.props.getOrElse("ihavemoney_writefront_host", "127.0.0.1")
+lazy val writefront_http_port = sys.props.getOrElse("ihavemoney_writefront_http_port", "8101")
+lazy val writefront_tcp_port = sys.props.getOrElse("ihavemoney_writefront_tcp_port", "10101")
 
-lazy val readfront_host = sys.props.getOrElse("ihavemoney.readfront.host", "127.0.0.1")
-lazy val readfront_http_port = sys.props.getOrElse("ihavemoney.readfront.http_port", "8201")
-lazy val readfront_tcp_port = sys.props.getOrElse("ihavemoney.readfront.tcp_port", "10201")
+lazy val readfront_host = sys.props.getOrElse("ihavemoney_readfront_host", "127.0.0.1")
+lazy val readfront_http_port = sys.props.getOrElse("ihavemoney_readfront_http_port", "8201")
+lazy val readfront_tcp_port = sys.props.getOrElse("ihavemoney_readfront_tcp_port", "10201")
 
 lazy val testDependencies = libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % scalaCheckVersion % "test",
@@ -158,25 +159,31 @@ lazy val writeBackend = project.in(file("write-backend"))
       val resources = (resourceDirectory in Compile).value / applicationConf
       val entry = Seq(
         "java",
-        s"-Dihavemoney.writeback.db.user=$journal_db_user",
-        s"-Dihavemoney.writeback.db.password=$journal_db_password",
-        s"-Dihavemoney.writeback.db.host=$journal_db_host",
-        s"-Dihavemoney.writeback.db.port=$journal_db_port",
-        s"-Dihavemoney.writeback.db.name=$journal_db_name",
-        s"-Dihavemoney.writeback.host=$writeback_host",
-        s"-Dihavemoney.writeback.port=$writeback_port",
         s"-Dconfig.file=$applicationConf",
         "-jar",
         artifactTargetPath
       )
       new Dockerfile {
         from("java:8")
+        env(
+          "ihavemoney_writeback_host" → "127.0.0.1",
+          "ihavemoney_writeback_port" → "9101",
+          "ihavemoney_writeback_db_host" → "127.0.0.1",
+          "ihavemoney_writeback_db_port" → "5432",
+          "ihavemoney_writeback_db_name" → "ihavemoney-write",
+          "ihavemoney_writeback_db_user" → "admin",
+          "ihavemoney_writeback_db_password" → "changeit"
+        )
         copy(artifact, artifactTargetPath)
         copy(resources, applicationConf)
-        expose(writeback_port.toInt)
+        addInstruction(Raw("expose", s"$$ihavemoney_writeback_port"))
         entryPoint(entry: _*)
       }
-    }))
+    },
+    imageNames in docker := Seq(
+      ImageName(s"ihavemoney/${name.value}:latest")
+    )
+  ))
   .dependsOn(domain, serialization)
 
 lazy val writeFrontend = project.in(file("write-frontend"))
@@ -210,11 +217,11 @@ lazy val writeFrontend = project.in(file("write-frontend"))
       val resources = (resourceDirectory in Compile).value / applicationConf
       val entry = Seq(
         "java",
-        s"-Dihavemoney.writefront.host=$writefront_host",
-        s"-Dihavemoney.writefront.http_port=$writefront_http_port",
-        s"-Dihavemoney.writefront.tcp_port=$writefront_tcp_port",
-        s"-Dihavemoney.writeback.host=$writeback_host",
-        s"-Dihavemoney.writeback.port=$writeback_port",
+        s"-Dihavemoney_writefront_host=$writefront_host",
+        s"-Dihavemoney_writefront_http_port=$writefront_http_port",
+        s"-Dihavemoney_writefront_tcp_port=$writefront_tcp_port",
+        s"-Dihavemoney_writeback_host=$writeback_host",
+        s"-Dihavemoney_writeback_port=$writeback_port",
         s"-Dconfig.file=$applicationConf",
         "-jar",
         artifactTargetPath
@@ -272,16 +279,16 @@ lazy val readBackend = project.in(file("read-backend"))
       val resources = (resourceDirectory in Compile).value / applicationConf
       val entry = Seq(
         "java",
-        s"-Dihavemoney.writeback.db.user=$journal_db_user",
-        s"-Dihavemoney.writeback.db.password=$journal_db_password",
-        s"-Dihavemoney.writeback.db.host=$journal_db_host",
-        s"-Dihavemoney.writeback.db.port=$journal_db_port",
-        s"-Dihavemoney.writeback.db.name=$journal_db_name",
-        s"-Dihavemoney.readback.db.user=$read_db_user",
-        s"-Dihavemoney.readback.db.password=$read_db_password",
-        s"-Dihavemoney.readback.db.host=$read_db_host",
-        s"-Dihavemoney.readback.db.port=$read_db_port",
-        s"-Dihavemoney.readback.db.name=$read_db_name",
+        s"-Dihavemoney_writeback_db_user=$journal_db_user",
+        s"-Dihavemoney_writeback_db_password=$journal_db_password",
+        s"-Dihavemoney_writeback_db_host=$journal_db_host",
+        s"-Dihavemoney_writeback_db_port=$journal_db_port",
+        s"-Dihavemoney_writeback_db_name=$journal_db_name",
+        s"-Dihavemoney_readback_db_user=$read_db_user",
+        s"-Dihavemoney_readback_db_password=$read_db_password",
+        s"-Dihavemoney_readback_db_host=$read_db_host",
+        s"-Dihavemoney_readback_db_port=$read_db_port",
+        s"-Dihavemoney_readback_db_name=$read_db_name",
         s"-Dconfig.file=$applicationConf",
         "-jar",
         artifactTargetPath
@@ -328,11 +335,11 @@ lazy val readFrontend = project.in(file("read-frontend"))
       val resources = (resourceDirectory in Compile).value / applicationConf
       val entry = Seq(
         "java",
-        s"-Dihavemoney.readfront.host=$readfront_host",
-        s"-Dihavemoney.readfront.http_port=$readfront_http_port",
-        s"-Dihavemoney.readfront.tcp_port=$readfront_tcp_port",
-        s"-Dihavemoney.readback.host=$readback_host",
-        s"-Dihavemoney.readback.port=$readback_port",
+        s"-Dihavemoney_readfront_host=$readfront_host",
+        s"-Dihavemoney_readfront_http_port=$readfront_http_port",
+        s"-Dihavemoney_readfront_tcp_port=$readfront_tcp_port",
+        s"-Dihavemoney_readback_host=$readback_host",
+        s"-Dihavemoney_readback_port=$readback_port",
         s"-Dconfig.file=$applicationConf",
         "-jar",
         artifactTargetPath
