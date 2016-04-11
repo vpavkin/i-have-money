@@ -1,6 +1,6 @@
 package ru.pavkin.ihavemoney.readback
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import com.typesafe.config.ConfigFactory
 import io.funcqrs.akka.EventsSourceProvider
 import io.funcqrs.akka.backend.AkkaBackend
@@ -34,4 +34,6 @@ object Application extends App {
       name = "MoneyViewProjection"
     ).withBackendOffsetPersistence()
   }
+
+  val interface = system.actorOf(Props(new InterfaceActor(moneyRepo)), "interface")
 }
