@@ -14,13 +14,12 @@ import de.heikoseeberger.akkahttpcirce.CirceSupport
 import akka.http.scaladsl.model.StatusCodes._
 
 import scala.concurrent.duration._
-import protocol._
 import ru.pavkin.ihavemoney.domain.fortune.FortuneId
 import ru.pavkin.ihavemoney.domain.query.{MoneyBalance, QueryFailed, QueryId}
 
 object Application extends App with CirceSupport {
 
-  import io.circe.generic.auto._
+  import protocol._
 
   implicit val system = ActorSystem("IHaveMoneyReadFront")
   implicit val executor = system.dispatcher
@@ -35,13 +34,16 @@ object Application extends App with CirceSupport {
   val routes = {
     logRequestResult("i-have-money-read-frontend") {
       pathPrefix("money" / Segment) { fortuneId ⇒
-        complete {
-          val queryId = QueryId(UUID.randomUUID.toString)
-          readBack.query(MoneyBalance(queryId, FortuneId(fortuneId)))
-            .recover {
-              case timeout: AskTimeoutException ⇒
-                RequestTimeout → QueryFailed(queryId, s"Query $queryId timed out")
-            }
+        get {
+          complete {
+            val queryId = QueryId(UUID.randomUUID.toString)
+            readBack.query(MoneyBalance(queryId, FortuneId(fortuneId)))
+              .recover {
+                case timeout: AskTimeoutException ⇒
+                  RequestTimeout → QueryFailed(queryId, s"Query $queryId timed out")
+              }
+              .map(kv ⇒ kv._1 → conversions.toFrontendFormat(kv._2))
+          }
         }
       }
     }

@@ -1,5 +1,5 @@
 import com.trueaccord.scalapb.{ScalaPbPlugin => Protobuf}
-import org.flywaydb.sbt.FlywayPlugin._
+//import org.flywaydb.sbt.FlywayPlugin._
 import sbtdocker.Instructions._
 
 lazy val buildSettings = Seq(
@@ -84,8 +84,7 @@ lazy val protobufSettings = Protobuf.protobufSettings ++
 
 lazy val iHaveMoney = project.in(file("."))
   .settings(buildSettings)
-  .aggregate(domain, serialization, writeBackend, writeFrontend, readBackend, readFrontend)
-  .dependsOn(domain, serialization, writeBackend, writeFrontend, readBackend, readFrontend)
+  .aggregate(domain, serialization, writeBackend, writeFrontend, readBackend, readFrontendJS, readFrontendJVM)
 
 lazy val domain = project.in(file("domain"))
   .settings(
@@ -123,14 +122,14 @@ lazy val writeBackend = project.in(file("write-backend"))
     name := "write-backend"
   )
   .settings(allSettings: _*)
-  .settings(flywaySettings: _*)
-  .settings(
-    flywayUrl := s"jdbc:postgresql://$journal_db_host:$journal_db_port/$journal_db_name",
-    flywayUser := journal_db_user,
-    flywayPassword := journal_db_password,
-    flywayBaselineOnMigrate := true,
-    flywayLocations := Seq("filesystem:write-backend/src/main/resources/db/migrations")
-  )
+//  .settings(flywaySettings: _*)
+//  .settings(
+//    flywayUrl := s"jdbc:postgresql://$journal_db_host:$journal_db_port/$journal_db_name",
+//    flywayUser := journal_db_user,
+//    flywayPassword := journal_db_password,
+//    flywayBaselineOnMigrate := true,
+//    flywayLocations := Seq("filesystem:write-backend/src/main/resources/db/migrations")
+//  )
   .settings(
     libraryDependencies ++= Seq(
       "io.strongtyped" %% "fun-cqrs-akka" % funCQRSVersion,
@@ -249,14 +248,14 @@ lazy val readBackend = project.in(file("read-backend"))
     name := "read-backend"
   )
   .settings(allSettings: _*)
-  .settings(flywaySettings: _*)
-  .settings(
-    flywayUrl := s"jdbc:postgresql://$read_db_host:$read_db_port/$read_db_name",
-    flywayUser := read_db_user,
-    flywayPassword := read_db_password,
-    flywayBaselineOnMigrate := true,
-    flywayLocations := Seq("filesystem:read-backend/src/main/resources/db/migrations")
-  )
+//  .settings(flywaySettings: _*)
+//  .settings(
+//    flywayUrl := s"jdbc:postgresql://$read_db_host:$read_db_port/$read_db_name",
+//    flywayUser := read_db_user,
+//    flywayPassword := read_db_password,
+//    flywayBaselineOnMigrate := true,
+//    flywayLocations := Seq("filesystem:read-backend/src/main/resources/db/migrations")
+//  )
   .settings(
     libraryDependencies ++= Seq(
       "io.strongtyped" %% "fun-cqrs-akka" % funCQRSVersion,
@@ -317,13 +316,18 @@ lazy val readBackend = project.in(file("read-backend"))
   ))
   .dependsOn(domain, serialization)
 
-lazy val readFrontend = project.in(file("read-frontend"))
+lazy val readFrontend = crossProject.in(file("read-frontend"))
   .settings(
     moduleName := "read-frontend",
     name := "read-frontend"
   )
   .settings(allSettings: _*)
-  .settings(
+  .jsSettings(libraryDependencies ++= Seq(
+    "io.circe" %%% "circe-core" % circeVersion,
+    "io.circe" %%% "circe-generic" % circeVersion,
+    "io.circe" %%% "circe-parser" % circeVersion
+  ))
+  .jvmSettings(
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor" % akkaVersion,
       "com.typesafe.akka" %% "akka-remote" % akkaVersion,
@@ -333,44 +337,49 @@ lazy val readFrontend = project.in(file("read-frontend"))
       "io.circe" %% "circe-generic" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
       "de.heikoseeberger" %% "akka-http-circe" % "1.5.3"
-    )
+    ),
+    testDependencies
   )
-  .settings(testDependencies)
-  .settings(
+  .jvmSettings(
     mainClass in assembly := Some("ru.pavkin.ihavemoney.readfront.Application"),
     assemblyJarName in assembly := "readfront.jar"
   )
-  .enablePlugins(DockerPlugin)
-  .settings(Seq(
-    dockerfile in docker := {
-      val artifact: File = assembly.value
-      val artifactTargetPath = artifact.name
-      val applicationConf = "application.conf"
-      val resources = (resourceDirectory in Compile).value / applicationConf
-      val entry = Seq(
-        "java",
-        s"-Dconfig.file=$applicationConf",
-        "-jar",
-        artifactTargetPath
-      )
-      new Dockerfile {
-        from("java:8")
-        env(
-          "ihavemoney_readback_host" → "127.0.0.1",
-          "ihavemoney_readback_port" → "9201",
-          "ihavemoney_readfront_host" → "127.0.0.1",
-          "ihavemoney_readfront_http_port" → "8201",
-          "ihavemoney_readfront_tcp_port" → "10201"
+  .jvmConfigure(_
+    .dependsOn(domain, serialization)
+    .enablePlugins(DockerPlugin)
+    .settings(Seq(
+      dockerfile in docker := {
+        val artifact: File = assembly.value
+        val artifactTargetPath = artifact.name
+        val applicationConf = "application.conf"
+        val resources = (resourceDirectory in Compile).value / applicationConf
+        val entry = Seq(
+          "java",
+          s"-Dconfig.file=$applicationConf",
+          "-jar",
+          artifactTargetPath
         )
-        copy(artifact, artifactTargetPath)
-        copy(resources, applicationConf)
-        addInstruction(Raw("expose", s"$$ihavemoney_readfront_tcp_port"))
-        addInstruction(Raw("expose", s"$$ihavemoney_readfront_http_port"))
-        entryPoint(entry: _*)
-      }
-    },
-    imageNames in docker := Seq(
-      ImageName(s"ihavemoney/${name.value}:latest")
-    )
-  ))
-  .dependsOn(domain, serialization)
+        new Dockerfile {
+          from("java:8")
+          env(
+            "ihavemoney_readback_host" → "127.0.0.1",
+            "ihavemoney_readback_port" → "9201",
+            "ihavemoney_readfront_host" → "127.0.0.1",
+            "ihavemoney_readfront_http_port" → "8201",
+            "ihavemoney_readfront_tcp_port" → "10201"
+          )
+          copy(artifact, artifactTargetPath)
+          copy(resources, applicationConf)
+          addInstruction(Raw("expose", s"$$ihavemoney_readfront_tcp_port"))
+          addInstruction(Raw("expose", s"$$ihavemoney_readfront_http_port"))
+          entryPoint(entry: _*)
+        }
+      },
+      imageNames in docker := Seq(
+        ImageName(s"ihavemoney/${name.value}:latest")
+      )
+    ))
+  )
+
+val readFrontendJS = readFrontend.js
+val readFrontendJVM = readFrontend.jvm
