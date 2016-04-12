@@ -2,26 +2,21 @@
 set -e
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-CREATE TABLE IF NOT EXISTS public.journal (
-  persistence_id VARCHAR(255) NOT NULL,
-  sequence_number BIGINT NOT NULL,
-  created BIGINT NOT NULL,
-  tags VARCHAR(255) DEFAULT NULL,
-  message BYTEA NOT NULL,
-  PRIMARY KEY(persistence_id, sequence_number)
-);
-
-CREATE TABLE IF NOT EXISTS public.deleted_to (
-  persistence_id VARCHAR(255) NOT NULL,
-  deleted_to BIGINT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS public.snapshot (
-  persistence_id VARCHAR(255) NOT NULL,
-  sequence_number BIGINT NOT NULL,
-  created BIGINT NOT NULL,
-  snapshot BYTEA NOT NULL,
-  PRIMARY KEY(persistence_id, sequence_number)
-);
-
+CREATE DATABASE "ihavemoney-read"
+  WITH OWNER = admin
+       ENCODING = 'UTF8'
+       TABLESPACE = pg_default
+       LC_COLLATE = 'en_US.utf8'
+       LC_CTYPE = 'en_US.utf8'
+       CONNECTION LIMIT = -1;
+CREATE DATABASE "ihavemoney-write"
+ WITH OWNER = admin
+	  ENCODING = 'UTF8'
+	  TABLESPACE = pg_default
+	  LC_COLLATE = 'en_US.utf8'
+	  LC_CTYPE = 'en_US.utf8'
+		  CONNECTION LIMIT = -1;
 EOSQL
+
+psql -v ON_ERROR_STOP=1 -d ihavemoney-read --username "$POSTGRES_USER" -f V1_0__ReadTables.sql
+psql -v ON_ERROR_STOP=1 -d ihavemoney-write --username "$POSTGRES_USER" -f V1_0__Journals.sql
