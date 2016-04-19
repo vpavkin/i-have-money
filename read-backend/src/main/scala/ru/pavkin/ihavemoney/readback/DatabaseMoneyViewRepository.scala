@@ -6,7 +6,7 @@ import slick.driver.PostgresDriver.api.{Database, _}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MoneyRepo(db: Database) {
+class DatabaseMoneyViewRepository(db: Database) extends MoneyViewRepository {
 
   private def findQuery(id: FortuneId, currency: Currency): Query[Money, MoneyRow, Seq] =
     Money.table

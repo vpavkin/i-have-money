@@ -6,7 +6,7 @@ import ru.pavkin.ihavemoney.domain.query._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class InterfaceActor(moneyRepo: MoneyRepo) extends Actor {
+class InterfaceActor(moneyRepo: MoneyViewRepository) extends Actor {
   implicit val dispatcher: ExecutionContext = context.system.dispatcher
 
   def receive: Receive = {

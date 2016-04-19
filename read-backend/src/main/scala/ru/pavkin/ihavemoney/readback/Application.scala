@@ -18,7 +18,7 @@ object Application extends App {
   val system: ActorSystem = ActorSystem(config.getString("app.system"))
 
   val database: PostgresDriver.Backend#Database = Database.forConfig("read-db")
-  val moneyRepo = new MoneyRepo(database)
+  val moneyRepo = new DatabaseMoneyViewRepository(database)
 
   val backend = new AkkaBackend {
     val actorSystem: ActorSystem = system

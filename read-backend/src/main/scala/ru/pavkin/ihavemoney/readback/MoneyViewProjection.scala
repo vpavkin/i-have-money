@@ -7,7 +7,7 @@ import ru.pavkin.ihavemoney.domain.fortune.{Currency, FortuneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MoneyViewProjection(repo: MoneyRepo) extends Projection {
+class MoneyViewProjection(repo: MoneyViewRepository) extends Projection {
 
   private def adjustFortune(id: FortuneId, currency: Currency, op: Option[BigDecimal] ⇒ BigDecimal): Future[Unit] = {
     repo.find(id, currency).flatMap {

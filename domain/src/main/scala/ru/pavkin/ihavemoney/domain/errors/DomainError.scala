@@ -4,6 +4,7 @@ import ru.pavkin.ihavemoney.domain.fortune.Currency
 
 sealed trait DomainError extends Throwable {
   def message: String
+  override def getMessage: String = message
 }
 case object NegativeWorth extends DomainError {
   def message = "Asset can't have negative worth"

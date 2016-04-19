@@ -8,21 +8,21 @@ case class Fortune(id: FortuneId, balances: Map[Currency, BigDecimal]) extends A
   type Id = FortuneId
   type Protocol = FortuneProtocol.type
 
-  def increase[C <: Currency](worth: Worth[C]): Fortune =
+  def increase(worth: Worth): Fortune =
     copy(balances = balances + (worth.currency -> (amount(worth.currency) + worth.amount)))
 
-  def decrease[C <: Currency](by: Worth[C]): Fortune =
+  def decrease(by: Worth): Fortune =
     copy(balances = balances + (by.currency -> (amount(by.currency) - by.amount)))
 
-  def worth[C <: Currency](currency: C): Worth[C] = Worth(amount(currency), currency)
-  def amount[C <: Currency](currency: C): BigDecimal = balances.getOrElse(currency, BigDecimal(0.0))
+  def worth(currency: Currency): Worth = Worth(amount(currency), currency)
+  def amount(currency: Currency): BigDecimal = balances.getOrElse(currency, BigDecimal(0.0))
 
   import FortuneProtocol._
 
   def metadata(cmd: FortuneCommand): FortuneMetadata =
     Fortune.metadata(id, cmd)
 
-def cantHaveNegativeBalance = action[Fortune]
+  def cantHaveNegativeBalance = action[Fortune]
     .rejectCommand {
       case cmd: Spend if this.amount(cmd.currency) < cmd.amount =>
         BalanceIsNotEnough(this.amount(cmd.currency), cmd.currency)

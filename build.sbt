@@ -1,5 +1,5 @@
 import com.trueaccord.scalapb.{ScalaPbPlugin => Protobuf}
-//import org.flywaydb.sbt.FlywayPlugin._
+
 import sbtdocker.Instructions._
 
 lazy val buildSettings = Seq(
@@ -75,7 +75,8 @@ lazy val readfront_tcp_port = sys.props.getOrElse("ihavemoney_readfront_tcp_port
 
 lazy val testDependencies = libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % scalaCheckVersion % "test",
-  "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
+  "org.scalatest" %% "scalatest" % scalaTestVersion % "test",
+  "io.strongtyped" %% "fun-cqrs-test-kit" % funCQRSVersion % "test"
 )
 
 lazy val protobufSettings = Protobuf.protobufSettings ++
@@ -122,14 +123,13 @@ lazy val writeBackend = project.in(file("write-backend"))
     name := "write-backend"
   )
   .settings(allSettings: _*)
-//  .settings(flywaySettings: _*)
-//  .settings(
-//    flywayUrl := s"jdbc:postgresql://$journal_db_host:$journal_db_port/$journal_db_name",
-//    flywayUser := journal_db_user,
-//    flywayPassword := journal_db_password,
-//    flywayBaselineOnMigrate := true,
-//    flywayLocations := Seq("filesystem:write-backend/src/main/resources/db/migrations")
-//  )
+  .settings(
+    flywayUrl := s"jdbc:postgresql://$journal_db_host:$journal_db_port/$journal_db_name",
+    flywayUser := journal_db_user,
+    flywayPassword := journal_db_password,
+    flywayBaselineOnMigrate := true,
+    flywayLocations := Seq("filesystem:write-backend/src/main/resources/db/migrations")
+  )
   .settings(
     libraryDependencies ++= Seq(
       "io.strongtyped" %% "fun-cqrs-akka" % funCQRSVersion,
@@ -248,14 +248,13 @@ lazy val readBackend = project.in(file("read-backend"))
     name := "read-backend"
   )
   .settings(allSettings: _*)
-//  .settings(flywaySettings: _*)
-//  .settings(
-//    flywayUrl := s"jdbc:postgresql://$read_db_host:$read_db_port/$read_db_name",
-//    flywayUser := read_db_user,
-//    flywayPassword := read_db_password,
-//    flywayBaselineOnMigrate := true,
-//    flywayLocations := Seq("filesystem:read-backend/src/main/resources/db/migrations")
-//  )
+  .settings(
+    flywayUrl := s"jdbc:postgresql://$read_db_host:$read_db_port/$read_db_name",
+    flywayUser := read_db_user,
+    flywayPassword := read_db_password,
+    flywayBaselineOnMigrate := true,
+    flywayLocations := Seq("filesystem:read-backend/src/main/resources/db/migrations")
+  )
   .settings(
     libraryDependencies ++= Seq(
       "io.strongtyped" %% "fun-cqrs-akka" % funCQRSVersion,
@@ -381,5 +380,19 @@ lazy val readFrontend = crossProject.in(file("read-frontend"))
     ))
   )
 
-val readFrontendJS = readFrontend.js
-val readFrontendJVM = readFrontend.jvm
+lazy val readFrontendJS = readFrontend.js
+lazy val readFrontendJVM = readFrontend.jvm
+
+lazy val tests = project.in(file("tests"))
+  .settings(
+    description := "Tests",
+    name := "tests"
+  )
+  .settings(allSettings: _*)
+  .settings(testDependencies)
+  .settings(
+    fork := true
+  )
+  .dependsOn(
+    domain, serialization, writeBackend, writeFrontend, readBackend, readFrontendJVM
+  )
