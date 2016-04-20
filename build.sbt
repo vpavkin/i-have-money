@@ -85,7 +85,7 @@ lazy val protobufSettings = Protobuf.protobufSettings ++
 
 lazy val iHaveMoney = project.in(file("."))
   .settings(buildSettings)
-  .aggregate(domain, serialization, writeBackend, writeFrontend, readBackend, readFrontendJS, readFrontendJVM)
+  .aggregate(domain, serialization, writeBackend, writeFrontend, readBackend, readFrontendProtocolJVM, readFrontend, jsApp)
 
 lazy val domain = project.in(file("domain"))
   .settings(
@@ -315,18 +315,28 @@ lazy val readBackend = project.in(file("read-backend"))
   ))
   .dependsOn(domain, serialization)
 
-lazy val readFrontend = crossProject.in(file("read-frontend"))
+lazy val readFrontendProtocol = crossProject.in(file("read-frontend-protocol"))
+  .settings(
+    moduleName := "read-frontend-protocol",
+    name := "read-frontend-protocol"
+  )
+  .settings(allSettings: _*)
+  .settings(libraryDependencies ++= Seq(
+    "io.circe" %%% "circe-core" % circeVersion,
+    "io.circe" %%% "circe-generic" % circeVersion,
+    "io.circe" %%% "circe-parser" % circeVersion
+  ))
+
+lazy val readFrontendProtocolJS = readFrontendProtocol.js
+lazy val readFrontendProtocolJVM = readFrontendProtocol.jvm
+
+lazy val readFrontend = project.in(file("read-frontend"))
   .settings(
     moduleName := "read-frontend",
     name := "read-frontend"
   )
   .settings(allSettings: _*)
-  .jsSettings(libraryDependencies ++= Seq(
-    "io.circe" %%% "circe-core" % circeVersion,
-    "io.circe" %%% "circe-generic" % circeVersion,
-    "io.circe" %%% "circe-parser" % circeVersion
-  ))
-  .jvmSettings(
+  .settings(
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor" % akkaVersion,
       "com.typesafe.akka" %% "akka-remote" % akkaVersion,
@@ -339,49 +349,81 @@ lazy val readFrontend = crossProject.in(file("read-frontend"))
     ),
     testDependencies
   )
-  .jvmSettings(
+  .settings(
     mainClass in assembly := Some("ru.pavkin.ihavemoney.readfront.Application"),
     assemblyJarName in assembly := "readfront.jar"
   )
-  .jvmConfigure(_
-    .dependsOn(domain, serialization)
-    .enablePlugins(DockerPlugin)
-    .settings(Seq(
-      dockerfile in docker := {
-        val artifact: File = assembly.value
-        val artifactTargetPath = artifact.name
-        val applicationConf = "application.conf"
-        val resources = (resourceDirectory in Compile).value / applicationConf
-        val entry = Seq(
-          "java",
-          s"-Dconfig.file=$applicationConf",
-          "-jar",
-          artifactTargetPath
-        )
-        new Dockerfile {
-          from("java:8")
-          env(
-            "ihavemoney_readback_host" → "127.0.0.1",
-            "ihavemoney_readback_port" → "9201",
-            "ihavemoney_readfront_host" → "127.0.0.1",
-            "ihavemoney_readfront_http_port" → "8201",
-            "ihavemoney_readfront_tcp_port" → "10201"
-          )
-          copy(artifact, artifactTargetPath)
-          copy(resources, applicationConf)
-          addInstruction(Raw("expose", s"$$ihavemoney_readfront_tcp_port"))
-          addInstruction(Raw("expose", s"$$ihavemoney_readfront_http_port"))
-          entryPoint(entry: _*)
-        }
-      },
-      imageNames in docker := Seq(
-        ImageName(s"ihavemoney/${name.value}:latest")
+  .enablePlugins(DockerPlugin)
+  .settings(Seq(
+    dockerfile in docker := {
+      val artifact: File = assembly.value
+      val artifactTargetPath = artifact.name
+      val applicationConf = "application.conf"
+      val resourceFiles = (resources in Compile).value
+      val entry = Seq(
+        "java",
+        s"-Dconfig.file=$applicationConf",
+        "-jar",
+        artifactTargetPath
       )
-    ))
+      new Dockerfile {
+        from("java:8")
+        env(
+          "ihavemoney_readback_host" → "127.0.0.1",
+          "ihavemoney_readback_port" → "9201",
+          "ihavemoney_readfront_host" → "127.0.0.1",
+          "ihavemoney_readfront_http_port" → "8201",
+          "ihavemoney_readfront_tcp_port" → "10201"
+        )
+        copy(artifact, artifactTargetPath)
+        resourceFiles.foreach(copy(_, "/"))
+        addInstruction(Raw("expose", s"$$ihavemoney_readfront_tcp_port"))
+        addInstruction(Raw("expose", s"$$ihavemoney_readfront_http_port"))
+        entryPoint(entry: _*)
+      }
+    },
+    imageNames in docker := Seq(
+      ImageName(s"ihavemoney/${name.value}:latest")
+    )
+  ))
+  .settings(
+    (resourceGenerators in Compile) +=
+      (packageJSDependencies in Compile in jsApp,
+        fastOptJS in Compile in jsApp,
+        packageScalaJSLauncher in Compile in jsApp)
+        .map((f1, f2, f3) => Seq(f1, f2.data, f3.data)).taskValue
   )
+  .dependsOn(domain, serialization, readFrontendProtocolJVM)
 
-lazy val readFrontendJS = readFrontend.js
-lazy val readFrontendJVM = readFrontend.jvm
+lazy val jsApp = project.in(file("js-app"))
+  .settings(
+    moduleName := "js-app",
+    name := "js-app"
+  )
+  .settings(allSettings: _*)
+  .enablePlugins(ScalaJSPlugin)
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.github.japgolly.scalajs-react" %%% "core" % "0.11.0",
+      "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.0",
+      "com.github.japgolly.scalacss" %%% "core" % "0.4.1",
+      "io.circe" %%% "circe-core" % circeVersion,
+      "io.circe" %%% "circe-generic" % circeVersion,
+      "io.circe" %%% "circe-parser" % circeVersion
+    ),
+    jsDependencies ++= Seq(
+      "org.webjars.bower" % "react" % "15.0.1" / "react-with-addons.js"
+        minified "react-with-addons.min.js"
+        commonJSName "React",
+
+      "org.webjars.bower" % "react" % "15.0.1" / "react-dom.js"
+        minified "react-dom.min.js"
+        dependsOn "react-with-addons.js"
+        commonJSName "ReactDOM"
+    ),
+    persistLauncher in Compile := true
+  )
+  .dependsOn(readFrontendProtocolJS)
 
 lazy val tests = project.in(file("tests"))
   .settings(
@@ -394,5 +436,5 @@ lazy val tests = project.in(file("tests"))
     fork := true
   )
   .dependsOn(
-    domain, serialization, writeBackend, writeFrontend, readBackend, readFrontendJVM
+    domain, serialization, writeBackend, writeFrontend, readBackend, readFrontendProtocolJVM, readFrontend
   )

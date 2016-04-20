@@ -45,9 +45,13 @@ object Application extends App with CirceSupport {
               .map(kv ⇒ kv._1 → conversions.toFrontendFormat(kv._2))
           }
         }
-      }
-    }
+      } ~
+        get {
+          pathSingleSlash {
+            getFromResource("index.html")
+          }
+        }
+    } ~ getFromResourceDirectory(".")
   }
-
   Http().bindAndHandle(routes, config.getString("app.host"), config.getInt("app.http-port"))
 }
