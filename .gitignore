@@ -1,6 +1,7 @@
 /docker-postgres/*.sql
 *.class
 *.log
+nohup.out
 
 # sbt specific
 .cache
