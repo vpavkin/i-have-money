@@ -1,18 +1,29 @@
 package ru.pavkin.ihavemoney.frontend.components
 
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra.router.RouterCtl
+import japgolly.scalajs.react.vdom.all._
 import ru.pavkin.ihavemoney.frontend.Route
 import ru.pavkin.ihavemoney.frontend.Route._
-import japgolly.scalajs.react.extra.router.RouterCtl
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.Reusability
-import japgolly.scalajs.react.vdom.all._
+import org.querki.jquery._
+
+import scala.scalajs.js
 
 object Nav {
 
-  val component = ReactComponentB[RouterCtl[Route]]("Menu")
-    .render_P { ctl =>
+  case class State(token: String)
+
+  class Backend($scope: BackendScope[RouterCtl[Route], State]) {
+
+    def clickCallback(routerCallback: ReactEvent ⇒ Callback)(e: ReactEvent) =
+      routerCallback(e).map { _ ⇒
+        $("#navbar", $scope.getDOMNode()).asInstanceOf[js.Dynamic].collapse("hide")
+        ()
+      }
+
+    def render(ctl: RouterCtl[Route], s: State) = {
       def routeLink(name: String, target: Route) =
-        li(a(ctl setOnClick target, name))
+        li(a(href := ctl.urlFor(target).value, onClick ==> clickCallback(ctl.setEH(target)), name))
 
       nav(className := "navbar navbar-default navbar-fixed-top",
         div(className := "container",
@@ -40,6 +51,10 @@ object Nav {
         )
       )
     }
-    .configure(Reusability.shouldComponentUpdate)
+  }
+
+  val component = ReactComponentB[RouterCtl[Route]]("Menu")
+    .initialState(State(""))
+    .renderBackend[Backend]
     .build
 }

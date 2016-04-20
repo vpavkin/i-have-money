@@ -408,6 +408,7 @@ lazy val jsApp = project.in(file("js-app"))
       "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.0",
       "com.github.japgolly.scalacss" %%% "core" % "0.4.1",
       "com.github.japgolly.scalacss" %%% "ext-react" % "0.4.1",
+      "org.querki" %%% "jquery-facade" % "1.0-RC3",
       "io.circe" %%% "circe-core" % circeVersion,
       "io.circe" %%% "circe-generic" % circeVersion,
       "io.circe" %%% "circe-parser" % circeVersion
