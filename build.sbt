@@ -407,6 +407,7 @@ lazy val jsApp = project.in(file("js-app"))
       "com.github.japgolly.scalajs-react" %%% "core" % "0.11.0",
       "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.0",
       "com.github.japgolly.scalacss" %%% "core" % "0.4.1",
+      "com.github.japgolly.scalacss" %%% "ext-react" % "0.4.1",
       "io.circe" %%% "circe-core" % circeVersion,
       "io.circe" %%% "circe-generic" % circeVersion,
       "io.circe" %%% "circe-parser" % circeVersion
@@ -419,7 +420,14 @@ lazy val jsApp = project.in(file("js-app"))
       "org.webjars.bower" % "react" % "15.0.1" / "react-dom.js"
         minified "react-dom.min.js"
         dependsOn "react-with-addons.js"
-        commonJSName "ReactDOM"
+        commonJSName "ReactDOM",
+
+      "org.webjars" % "jquery" % "2.2.3" / "jquery.js"
+        minified "jquery.min.js",
+
+      "org.webjars" % "bootstrap" % "3.3.6" / "bootstrap.js"
+        minified "bootstrap.min.js"
+        dependsOn "jquery.js"
     ),
     persistLauncher in Compile := true
   )
