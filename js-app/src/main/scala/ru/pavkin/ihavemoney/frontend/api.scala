@@ -36,6 +36,16 @@ object api {
       ReceiveIncomeRequest(amount, currency, category, comment).asJson.toString())
       .map(_.map(_ ⇒ ()))
 
+  def addExpense(id: String,
+                 amount: BigDecimal,
+                 currency: Currency,
+                 category: String,
+                 comment: Option[String])
+                (implicit ec: ExecutionContext): Future[String Xor Unit] =
+    postJSON(routes.addExpense(id).value,
+      ReceiveIncomeRequest(amount, currency, category, comment).asJson.toString())
+      .map(_.map(_ ⇒ ()))
+
   private def recover(f: Future[String Xor String])(implicit ec: ExecutionContext) = f.recover {
     case AjaxException(xhr) => (xhr.status match {
       case 404 => "NotFound"

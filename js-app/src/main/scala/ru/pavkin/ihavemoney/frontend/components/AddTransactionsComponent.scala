@@ -48,6 +48,23 @@ object AddTransactionsComponent {
         }
     }
 
+    def onExpenseSubmit(state: State)(e: ReactEventI) = e.preventDefaultCB >> Callback {
+      if (!isValid(state))
+        Callback.alert("Invalid data").runNow()
+      else
+        api.addExpense(
+          state.fortuneId,
+          BigDecimal(state.amount),
+          Currency.unsafeFromCode(state.currency),
+          state.category,
+          notEmpty(state.comment)
+        ).map {
+          case Xor.Left(error) ⇒ Callback.alert(s"Error: $error").runNow()
+          case _ ⇒ Callback.alert(s"Success")
+        }
+    }
+
+
     def isValid(s: State) =
       s.fortuneId.nonEmpty &&
         Try(BigDecimal(s.amount)).isSuccess &&
@@ -132,8 +149,7 @@ object AddTransactionsComponent {
             button(tpe := "submit", className := "btn btn-success", disabled := (!valid),
               onClick ==> onIncomeSubmit(state), "Income"),
             button(tpe := "submit", className := "btn btn-danger", disabled := (!valid),
-              //              onClick ==> onExpenseSubmit,
-              "Expense")
+              onClick ==> onExpenseSubmit(state), "Expense")
           )
         )
       )
