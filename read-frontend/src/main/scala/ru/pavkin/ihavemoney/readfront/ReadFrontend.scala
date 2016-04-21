@@ -18,7 +18,7 @@ import ru.pavkin.ihavemoney.domain.fortune.FortuneId
 import ru.pavkin.ihavemoney.domain.query.{MoneyBalance, QueryFailed, QueryId}
 import ru.pavkin.ihavemoney.protocol.readfront._
 
-object Application extends App with CirceSupport {
+object ReadFrontend extends App with CirceSupport {
 
   implicit val system = ActorSystem("IHaveMoneyReadFront")
   implicit val executor = system.dispatcher

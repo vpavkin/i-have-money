@@ -15,9 +15,7 @@ import ch.megard.akka.http.cors.{CorsDirectives, CorsSettings}
 import akka.http.scaladsl.model.StatusCodes._
 import scala.concurrent.duration._
 
-object Application extends App with CirceSupport with CorsDirectives {
-
-  import io.circe.generic.auto._
+object WriteFrontend extends App with CirceSupport with CorsDirectives {
 
   implicit val system = ActorSystem("IHaveMoneyWriteFront")
   implicit val executor = system.dispatcher

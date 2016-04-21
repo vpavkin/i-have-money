@@ -13,7 +13,7 @@ import ru.pavkin.ihavemoney.domain.fortune._
 
 import scala.concurrent.duration._
 
-object Application extends App {
+object WriteBackend extends App {
 
   println("Starting IHaveMoney write backend...")
 

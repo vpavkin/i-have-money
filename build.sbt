@@ -152,7 +152,7 @@ lazy val writeBackend = project.in(file("write-backend"))
   )
   .settings(testDependencies)
   .settings(
-    mainClass in assembly := Some("ru.pavkin.ihavemoney.writeback.Application"),
+    mainClass in assembly := Some("ru.pavkin.ihavemoney.writeback.WriteBackend"),
     assemblyJarName in assembly := "writeback.jar"
   )
   .enablePlugins(DockerPlugin)
@@ -211,7 +211,7 @@ lazy val writeFrontend = project.in(file("write-frontend"))
   )
   .settings(testDependencies)
   .settings(
-    mainClass in assembly := Some("ru.pavkin.ihavemoney.writefront.Application"),
+    mainClass in assembly := Some("ru.pavkin.ihavemoney.writefront.WriteFrontend"),
     assemblyJarName in assembly := "writefront.jar"
   )
   .enablePlugins(DockerPlugin)
@@ -278,7 +278,7 @@ lazy val readBackend = project.in(file("read-backend"))
   )
   .settings(testDependencies)
   .settings(
-    mainClass in assembly := Some("ru.pavkin.ihavemoney.readback.Application"),
+    mainClass in assembly := Some("ru.pavkin.ihavemoney.readback.ReadBackend"),
     assemblyJarName in assembly := "readback.jar"
   )
   .enablePlugins(DockerPlugin)
@@ -359,7 +359,7 @@ lazy val readFrontend = project.in(file("read-frontend"))
     testDependencies
   )
   .settings(
-    mainClass in assembly := Some("ru.pavkin.ihavemoney.readfront.Application"),
+    mainClass in assembly := Some("ru.pavkin.ihavemoney.readfront.ReadFrontend"),
     assemblyJarName in assembly := "readfront.jar"
   )
   .enablePlugins(DockerPlugin)

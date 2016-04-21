@@ -10,7 +10,7 @@ import ru.pavkin.ihavemoney.domain.fortune._
 import slick.driver.PostgresDriver
 import slick.driver.PostgresDriver.api._
 
-object Application extends App {
+object ReadBackend extends App {
 
   println("Starting IHaveMoney read backend...")
 
