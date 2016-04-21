@@ -1,7 +1,7 @@
 package ru.pavkin.ihavemoney.readfront
 
 import ru.pavkin.ihavemoney.domain.query.{EntityNotFound, MoneyBalanceQueryResult, QueryFailed, QueryResult}
-import ru.pavkin.ihavemoney.readfront.protocol.{FrontendEntityNotFound, FrontendMoneyBalance, FrontendQueryFailed, FrontendQueryResult}
+import ru.pavkin.ihavemoney.protocol.readfront._
 
 object conversions {
 

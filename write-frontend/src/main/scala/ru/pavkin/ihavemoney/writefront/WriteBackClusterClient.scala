@@ -9,7 +9,7 @@ import akka.util.Timeout
 import io.funcqrs.DomainCommand
 import ru.pavkin.ihavemoney.domain.CommandEnvelope
 import ru.pavkin.ihavemoney.proto.results.{CommandSuccess, InvalidCommand, UnexpectedFailure, UnknownCommand}
-import ru.pavkin.ihavemoney.writefront.protocol.RequestResult
+import ru.pavkin.ihavemoney.protocol.writefront._
 
 import scala.concurrent.{ExecutionContext, Future}
 

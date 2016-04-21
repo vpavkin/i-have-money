@@ -8,6 +8,16 @@ object Global extends StyleSheet.Standalone {
   import dsl._
 
   "body" - (
-    paddingTop(70 px)
+    paddingTop(80 px)
     )
+
+  ".form-group" -(
+    &("button") - (
+      marginRight(15 px)
+      ),
+    &(".form-control") - (
+      marginBottom(10 px)
+      )
+    )
+
 }

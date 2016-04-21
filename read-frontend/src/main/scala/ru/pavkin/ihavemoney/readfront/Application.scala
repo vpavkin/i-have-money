@@ -16,10 +16,9 @@ import akka.http.scaladsl.model.StatusCodes._
 import scala.concurrent.duration._
 import ru.pavkin.ihavemoney.domain.fortune.FortuneId
 import ru.pavkin.ihavemoney.domain.query.{MoneyBalance, QueryFailed, QueryId}
+import ru.pavkin.ihavemoney.protocol.readfront._
 
 object Application extends App with CirceSupport {
-
-  import protocol._
 
   implicit val system = ActorSystem("IHaveMoneyReadFront")
   implicit val executor = system.dispatcher
@@ -51,7 +50,7 @@ object Application extends App with CirceSupport {
             getFromResource("index.html")
           }
         }
-    } ~ getFromResourceDirectory(".")
+    } ~ getFromResourceDirectory("")
   }
   Http().bindAndHandle(routes, config.getString("app.host"), config.getInt("app.http-port"))
 }

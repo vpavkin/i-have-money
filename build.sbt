@@ -44,6 +44,7 @@ lazy val catsVersion = "0.4.1"
 lazy val circeVersion = "0.3.0"
 lazy val akkaVersion = "2.4.2"
 lazy val akkaPersistenceJDBCVersion = "2.2.15"
+lazy val akkaHttpCorsVersion = "0.1.1"
 lazy val scalaCheckVersion = "1.12.5"
 lazy val scalaTestVersion = "2.2.6"
 
@@ -85,9 +86,9 @@ lazy val protobufSettings = Protobuf.protobufSettings ++
 
 lazy val iHaveMoney = project.in(file("."))
   .settings(buildSettings)
-  .aggregate(domain, serialization, writeBackend, writeFrontend, readBackend, readFrontendProtocolJVM, readFrontend, jsApp)
+  .aggregate(domainJVM, serialization, writeBackend, writeFrontend, readBackend, frontendProtocolJVM, readFrontend, jsApp)
 
-lazy val domain = project.in(file("domain"))
+lazy val domain = crossProject.in(file("domain"))
   .settings(
     moduleName := "domain",
     name := "domain"
@@ -95,12 +96,17 @@ lazy val domain = project.in(file("domain"))
   .settings(allSettings: _*)
   .settings(
     libraryDependencies ++= Seq(
-      "com.chuusai" %% "shapeless" % shapelessVersion,
-      "org.typelevel" %% "cats-core" % catsVersion,
-      "io.strongtyped" %% "fun-cqrs-core" % funCQRSVersion
+      "com.chuusai" %%% "shapeless" % shapelessVersion,
+      "org.typelevel" %%% "cats-core" % catsVersion
     )
   )
-  .settings(testDependencies)
+  .jvmSettings(libraryDependencies ++= Seq(
+    "io.strongtyped" %% "fun-cqrs-core" % funCQRSVersion
+  ))
+  .jvmSettings(testDependencies)
+
+lazy val domainJVM = domain.jvm
+lazy val domainJS = domain.js
 
 lazy val serialization = project.in(file("serialization"))
   .settings(
@@ -115,7 +121,7 @@ lazy val serialization = project.in(file("serialization"))
       "com.typesafe.akka" %% "akka-persistence" % akkaVersion
     )
   )
-  .dependsOn(domain)
+  .dependsOn(domainJVM)
 
 lazy val writeBackend = project.in(file("write-backend"))
   .settings(
@@ -141,7 +147,7 @@ lazy val writeBackend = project.in(file("write-backend"))
       "com.typesafe.akka" %% "akka-cluster-sharding" % akkaVersion,
       "com.typesafe.akka" %% "akka-distributed-data-experimental" % akkaVersion,
       "com.typesafe.akka" %% "akka-persistence-query-experimental" % akkaVersion,
-      "org.postgresql" % "postgresql" % postgreSQLVersion
+       "org.postgresql" % "postgresql" % postgreSQLVersion
     )
   )
   .settings(testDependencies)
@@ -183,7 +189,7 @@ lazy val writeBackend = project.in(file("write-backend"))
       ImageName(s"ihavemoney/${name.value}:latest")
     )
   ))
-  .dependsOn(domain, serialization)
+  .dependsOn(domainJVM, serialization)
 
 lazy val writeFrontend = project.in(file("write-frontend"))
   .settings(
@@ -196,6 +202,7 @@ lazy val writeFrontend = project.in(file("write-frontend"))
       "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
       "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
       "com.typesafe.akka" %% "akka-cluster-tools" % akkaVersion,
+      "ch.megard" %% "akka-http-cors" % akkaHttpCorsVersion,
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
@@ -240,7 +247,7 @@ lazy val writeFrontend = project.in(file("write-frontend"))
       ImageName(s"ihavemoney/${name.value}:latest")
     )
   ))
-  .dependsOn(domain, serialization)
+  .dependsOn(domainJVM, frontendProtocolJVM, serialization)
 
 lazy val readBackend = project.in(file("read-backend"))
   .settings(
@@ -313,12 +320,12 @@ lazy val readBackend = project.in(file("read-backend"))
       ImageName(s"ihavemoney/${name.value}:latest")
     )
   ))
-  .dependsOn(domain, serialization)
+  .dependsOn(domainJVM, serialization)
 
-lazy val readFrontendProtocol = crossProject.in(file("read-frontend-protocol"))
+lazy val frontendProtocol = crossProject.in(file("frontend-protocol"))
   .settings(
-    moduleName := "read-frontend-protocol",
-    name := "read-frontend-protocol"
+    moduleName := "frontend-protocol",
+    name := "frontend-protocol"
   )
   .settings(allSettings: _*)
   .settings(libraryDependencies ++= Seq(
@@ -326,9 +333,10 @@ lazy val readFrontendProtocol = crossProject.in(file("read-frontend-protocol"))
     "io.circe" %%% "circe-generic" % circeVersion,
     "io.circe" %%% "circe-parser" % circeVersion
   ))
+  .dependsOn(domain)
 
-lazy val readFrontendProtocolJS = readFrontendProtocol.js
-lazy val readFrontendProtocolJVM = readFrontendProtocol.jvm
+lazy val frontendProtocolJS = frontendProtocol.js
+lazy val frontendProtocolJVM = frontendProtocol.jvm
 
 lazy val readFrontend = project.in(file("read-frontend"))
   .settings(
@@ -342,6 +350,7 @@ lazy val readFrontend = project.in(file("read-frontend"))
       "com.typesafe.akka" %% "akka-remote" % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaVersion,
       "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
+      "ch.megard" %% "akka-http-cors" % akkaHttpCorsVersion,
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
@@ -393,7 +402,7 @@ lazy val readFrontend = project.in(file("read-frontend"))
         packageScalaJSLauncher in Compile in jsApp)
         .map((f1, f2, f3) => Seq(f1, f2.data, f3.data)).taskValue
   )
-  .dependsOn(domain, serialization, readFrontendProtocolJVM)
+  .dependsOn(domainJVM, serialization, frontendProtocolJVM)
 
 lazy val jsApp = project.in(file("js-app"))
   .settings(
@@ -432,7 +441,7 @@ lazy val jsApp = project.in(file("js-app"))
     ),
     persistLauncher in Compile := true
   )
-  .dependsOn(readFrontendProtocolJS)
+  .dependsOn(frontendProtocolJS)
 
 lazy val tests = project.in(file("tests"))
   .settings(
@@ -445,5 +454,5 @@ lazy val tests = project.in(file("tests"))
     fork := true
   )
   .dependsOn(
-    domain, serialization, writeBackend, writeFrontend, readBackend, readFrontendProtocolJVM, readFrontend
+    domainJVM, serialization, writeBackend, writeFrontend, readBackend, frontendProtocolJVM, readFrontend
   )

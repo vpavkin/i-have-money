@@ -4,7 +4,7 @@ import japgolly.scalajs.react.vdom.all._
 import org.scalajs.dom
 import org.scalajs.dom._
 import org.scalajs.dom.raw.HTMLStyleElement
-import ru.pavkin.ihavemoney.frontend.Route
+import ru.pavkin.ihavemoney.frontend.{Route, api}
 import ru.pavkin.ihavemoney.frontend.Route._
 import ru.pavkin.ihavemoney.frontend.components.{AddTransactionsComponent, BalanceViewComponent, Nav}
 import ru.pavkin.ihavemoney.frontend.styles.Global
@@ -33,12 +33,10 @@ object IHaveMoneyApp extends JSApp {
     div(className := "container", r.render())
   )
 
-  val baseUrl = BaseUrl.fromWindowOrigin_/
-
   @JSExport
   def main(): Unit = {
     dom.document.head appendChild Global.render[HTMLStyleElement]
-    val router = Router(baseUrl, routerConfig.logToConsole)
+    val router = Router(api.readFrontBaseUrl, routerConfig.logToConsole)
     router() render dom.document.getElementById("root")
   }
 }
