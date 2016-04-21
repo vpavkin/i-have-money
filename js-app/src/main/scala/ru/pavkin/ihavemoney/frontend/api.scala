@@ -1,9 +1,10 @@
 package ru.pavkin.ihavemoney.frontend
 
-import io.circe._
 import io.circe.syntax._
+import io.circe.parser._
 import cats.data.{Xor, XorT}
 import cats.syntax.xor._
+import cats.std.future._
 import japgolly.scalajs.react.extra.router.BaseUrl
 import org.scalajs.dom
 import org.scalajs.dom.ext.{Ajax, AjaxException}
@@ -24,6 +25,7 @@ object api {
   object routes {
     def addIncome(fortuneId: String) = writeFrontBaseUrl / "fortune" / fortuneId / "income"
     def addExpense(fortuneId: String) = writeFrontBaseUrl / "fortune" / fortuneId / "spend"
+    def getBalances(fortuneId: String) = readFrontBaseUrl / "balance" / fortuneId
   }
 
   def addIncome(id: String,
@@ -45,6 +47,14 @@ object api {
     postJSON(routes.addExpense(id).value,
       ReceiveIncomeRequest(amount, currency, category, comment).asJson.toString())
       .map(_.map(_ ⇒ ()))
+
+  def getBalances(id: String)(implicit ec: ExecutionContext): Future[String Xor Map[String, BigDecimal]] =
+    XorT(get(routes.getBalances(id).value))
+      .subflatMap(decode[FrontendQueryResult](_).leftMap(_.getMessage))
+      .subflatMap {
+        case FrontendMoneyBalance(_, balances) ⇒ balances.right
+        case other ⇒ s"Unexpected responce: $other".left
+      }.value
 
   private def recover(f: Future[String Xor String])(implicit ec: ExecutionContext) = f.recover {
     case AjaxException(xhr) => (xhr.status match {

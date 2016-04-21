@@ -9,5 +9,6 @@ object readfront extends SharedProtocol {
   case class FrontendQueryFailed(id: String, error: String) extends FrontendQueryResult
   case class FrontendEntityNotFound(entityId: String, error: String) extends FrontendQueryResult
 
-  implicit val encoder: Encoder[FrontendQueryResult] = deriveEncoder[FrontendQueryResult]
+  implicit val fqEncoder: Encoder[FrontendQueryResult] = deriveEncoder[FrontendQueryResult]
+  implicit val fqDecoder: Decoder[FrontendQueryResult] = deriveDecoder[FrontendQueryResult]
 }

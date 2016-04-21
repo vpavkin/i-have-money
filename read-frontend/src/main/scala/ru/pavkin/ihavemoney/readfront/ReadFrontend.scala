@@ -32,7 +32,7 @@ object ReadFrontend extends App with CirceSupport {
 
   val routes = {
     logRequestResult("i-have-money-read-frontend") {
-      pathPrefix("money" / Segment) { fortuneId ⇒
+      pathPrefix("balance" / Segment) { fortuneId ⇒
         get {
           complete {
             val queryId = QueryId(UUID.randomUUID.toString)
