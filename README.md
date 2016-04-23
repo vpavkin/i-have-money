@@ -81,7 +81,7 @@ Next we'll see how to run the example on localhost with default configuration. T
 #### Docker image
 if you don't have Postgres installed, just run `./docker-postgres.sh`. This will run a docker container with PostgreSQL instance that is already configure with all "I Have Money" schemas.
 
-The container will occupy port 5432 of your host machine. Of course, docker has to be configured for this to run.
+The container will use port 5432 of your host machine or docker VM. Of course, docker has to be configured for this to run.
 
 #### Locally installed PostgreSQL
 Those, who **have postgreSQL installed locally**:
@@ -110,15 +110,11 @@ First build all the containers:
 sbt docker
 ```
 
-Then just run the `./docker-all-local.sh`.
-
-### Note for MacOS X and Windows users
-Docker VM IP differs from 127.0.0.1. To run with docker you'll have to replace `127.0.0.1` everywhere in .sh scripts with your docker VM IP address.
-
-Also, **before building docker containers**, please change the write frontend url in `index.html` accordingly.
+On Linux run `./docker-all-local.sh`.
+On MacOS X run `./docker-all-vm.sh`
 
 ## Open the web UI
 
 Go to 127.0.0.1:8201 with your favourite browser.
 
-Change the IP to Docker VM IP in case running with docker on MacOS X or Windows.
+Change the IP to Docker VM IP in case running with docker on MacOS X.
