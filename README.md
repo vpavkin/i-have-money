@@ -116,3 +116,9 @@ Then just run the `./docker-all-local.sh`.
 Docker VM IP differs from 127.0.0.1. To run with docker you'll have to replace `127.0.0.1` everywhere in .sh scripts with your docker VM IP address.
 
 Also, **before building docker containers**, please change the write frontend url in `index.html` accordingly.
+
+## Open the web UI
+
+Go to 127.0.0.1:8201 with your favourite browser.
+
+Change the IP to Docker VM IP in case running with docker on MacOS X or Windows.
