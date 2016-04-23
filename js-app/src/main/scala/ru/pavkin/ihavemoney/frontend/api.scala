@@ -1,26 +1,29 @@
 package ru.pavkin.ihavemoney.frontend
 
-import io.circe.syntax._
-import io.circe.parser._
 import cats.data.{Xor, XorT}
-import cats.syntax.xor._
 import cats.std.future._
+import cats.syntax.xor._
+import io.circe.parser._
+import io.circe.syntax._
+import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.extra.router.BaseUrl
-import org.scalajs.dom
 import org.scalajs.dom.ext.{Ajax, AjaxException}
 import ru.pavkin.ihavemoney.domain.fortune.Currency
 import ru.pavkin.ihavemoney.protocol.readfront._
 import ru.pavkin.ihavemoney.protocol.writefront._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.scalajs.js
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 object api {
 
   val readFrontBaseUrl = BaseUrl.fromWindowOrigin_/
-  val writeFrontBaseUrl = BaseUrl(
-    dom.window.asInstanceOf[js.Dynamic].writefrontURL.asInstanceOf[String]
-  )
+  var writeFrontBaseUrl: BaseUrl = BaseUrl("")
+
+  get((readFrontBaseUrl / "write_front_url").value).foreach {
+    case Xor.Right(url) ⇒ writeFrontBaseUrl = BaseUrl(url).endWith_/
+    case Xor.Left(error) ⇒ Callback.alert(s"Failed to obtain writeback url: $error").runNow
+  }
 
   object routes {
     def addIncome(fortuneId: String) = writeFrontBaseUrl / "fortune" / fortuneId / "income"

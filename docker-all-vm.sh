@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export HOST_IP='127.0.0.1'
+export HOST_IP=$(docker-machine ip default)
 
 docker rm -f writeback writefront readback readfront
 nohup ./docker-writeback.sh &

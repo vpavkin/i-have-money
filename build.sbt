@@ -382,7 +382,9 @@ lazy val readFrontend = project.in(file("read-frontend"))
           "ihavemoney_readback_port" → "9201",
           "ihavemoney_readfront_host" → "127.0.0.1",
           "ihavemoney_readfront_http_port" → "8201",
-          "ihavemoney_readfront_tcp_port" → "10201"
+          "ihavemoney_readfront_tcp_port" → "10201",
+          "ihavemoney_writefront_host" → "127.0.0.1",
+          "ihavemoney_writefront_port" → "8101"
         )
         copy(artifact, artifactTargetPath)
         resourceFiles.foreach(copy(_, "/"))

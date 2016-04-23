@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.pattern.AskTimeoutException
 import akka.stream.ActorMaterializer
@@ -30,21 +31,30 @@ object ReadFrontend extends App with CirceSupport {
 
   val readBack = new ReadBackClient(system, config.getString("read-backend.interface"))
 
+  val writeFrontURL = s"http://${config.getString("write-frontend.host")}:${config.getString("write-frontend.port")}"
+
   val routes = {
     logRequestResult("i-have-money-read-frontend") {
-      pathPrefix("balance" / Segment) { fortuneId ⇒
+      path("write_front_url") {
         get {
           complete {
-            val queryId = QueryId(UUID.randomUUID.toString)
-            readBack.query(MoneyBalance(queryId, FortuneId(fortuneId)))
-              .recover {
-                case timeout: AskTimeoutException ⇒
-                  RequestTimeout → QueryFailed(queryId, s"Query $queryId timed out")
-              }
-              .map(kv ⇒ kv._1 → conversions.toFrontendFormat(kv._2))
+            HttpResponse(entity = HttpEntity(ContentType(MediaTypes.`text/plain`, HttpCharsets.`UTF-8`), writeFrontURL))
           }
         }
       } ~
+        pathPrefix("balance" / Segment) { fortuneId ⇒
+          get {
+            complete {
+              val queryId = QueryId(UUID.randomUUID.toString)
+              readBack.query(MoneyBalance(queryId, FortuneId(fortuneId)))
+                .recover {
+                  case timeout: AskTimeoutException ⇒
+                    RequestTimeout → QueryFailed(queryId, s"Query $queryId timed out")
+                }
+                .map(kv ⇒ kv._1 → conversions.toFrontendFormat(kv._2))
+            }
+          }
+        } ~
         get {
           pathSingleSlash {
             getFromResource("index.html")
