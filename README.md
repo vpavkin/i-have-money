@@ -22,7 +22,7 @@ The intent of the example is to solve several problems, that arise for ES/CQRS a
   * Akka Persistence and Persistent Query implementations are supplied by [akka-persistence-jdbc](https://github.com/dnvriend/akka-persistence-jdbc). Some gotchas here:
     * Manual workaround is needed to handle [differences](https://github.com/strongtyped/fun-cqrs/issues/49) in Persistent Query offset interpretation between fun-cqrs and akka-persistence-jdbc.
     * Event stream for persistent query is _live_ only when respective persistent actors [are on the same machine](https://github.com/dnvriend/akka-persistence-jdbc/issues/39). A live stream has to be constructed by hand in case of distributed scenario, when one node is writing the journal and another is polling it for a query side projection.
-* Each application can be assembled in a single .jar file and wrapped in a docker container for easier deployment (see [Launching with Docker](#launching-with-docker)).
+* Each application can be assembled in a single .jar file and wrapped in a docker container for easier deployment (see [Launching with Docker](#running-the-example)).
 * A web UI is served by the Read Frontend application. It's mobile friendly and written with [scalajs-react](https://github.com/japgolly/scalajs-react).
 * Single HTTP protocol definition is [cross-compiled](https://www.scala-js.org/doc/project/cross-build.html) and used by both web UI and HTTP frontends. [Circe](http://circe.io) takes care of JSON serialization.
 
